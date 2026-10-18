@@ -15,6 +15,9 @@ import org.kealohalabs.receiptbeat.ui.detail.DetailScreen
 import org.kealohalabs.receiptbeat.ui.home.HomeScreen
 import org.kealohalabs.receiptbeat.ui.onboarding.OnboardingScreen
 import org.kealohalabs.receiptbeat.ui.receipts.ReceiptsScreen
+import org.kealohalabs.receiptbeat.ui.review.EmailWizard
+import org.kealohalabs.receiptbeat.ui.review.MailAccountsScreen
+import org.kealohalabs.receiptbeat.ui.review.ReviewScreen
 import org.kealohalabs.receiptbeat.ui.settings.SettingsLinks
 import org.kealohalabs.receiptbeat.ui.settings.SettingsScreen
 
@@ -48,7 +51,9 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, 
                 }
             )
         }
-        composable<ReviewRoute> { Placeholder("Review") }
+        composable<ReviewRoute> {
+            ReviewScreen(addEmail = { nav.navigate(EmailWizardRoute()) }, accounts = { nav.navigate(MailAccountsRoute) })
+        }
         composable<MoneyRoute> { Placeholder("Money") }
         composable<SettingsRoute> {
             SettingsScreen(
@@ -68,8 +73,17 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, 
             }
             OnboardingScreen(addEmail = { finish(EmailWizardRoute()) }, done = { finish(null) })
         }
-        composable<MailAccountsRoute> { Placeholder("Mail accounts") }
-        composable<EmailWizardRoute> { Placeholder("Add email receipts") }
+        composable<MailAccountsRoute> { MailAccountsScreen(back = { nav.popBackStack() }, add = { nav.navigate(EmailWizardRoute()) }) }
+        composable<EmailWizardRoute> {
+            EmailWizard(
+                start = it.toRoute<EmailWizardRoute>().provider,
+                back = { nav.popBackStack() },
+                done = {
+                    nav.popBackStack()
+                    nav.navigate(ReviewRoute) { launchSingleTop = true }
+                },
+            )
+        }
         composable<BackupRoute> { Placeholder("Backup") }
     }
 }

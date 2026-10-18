@@ -99,6 +99,8 @@ class MailRepository @Inject constructor(
         )
     }
 
+    suspend fun deleteRule(r: SenderRule) = catalog.deleteSenderRule(r)
+
     fun ruleFor(rules: List<SenderRule>, sender: String): SenderRule? = rules.firstOrNull { matches(it.senderOrDomain, sender) }
 
     // Connected accounts: remembered scan ranges.

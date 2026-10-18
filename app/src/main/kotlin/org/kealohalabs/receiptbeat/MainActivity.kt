@@ -14,16 +14,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.kealohalabs.receiptbeat.capture.ReceiptPipeline
+import org.kealohalabs.receiptbeat.core.data.MailRepository
 import org.kealohalabs.receiptbeat.core.data.SettingsRepository
 import org.kealohalabs.receiptbeat.core.designsystem.ReceiptBeatTheme
 import org.kealohalabs.receiptbeat.core.designsystem.ThemeMode
 import org.kealohalabs.receiptbeat.core.model.Source
+import org.kealohalabs.receiptbeat.email.EmailImportWorker
 import org.kealohalabs.receiptbeat.ui.AppActions
 import org.kealohalabs.receiptbeat.ui.AppShell
 import org.kealohalabs.receiptbeat.ui.CaptureRoute
@@ -45,6 +48,8 @@ class MainActivity : FragmentActivity() {
 
     @Inject lateinit var sharing: Sharing
 
+    @Inject lateinit var mail: MailRepository
+
     /** Routes asked for by shortcuts, notifications and the share sheet. */
     private val routes = Channel<Any>(Channel.BUFFERED)
 
@@ -65,6 +70,7 @@ class MainActivity : FragmentActivity() {
         val first = runBlocking { settings.current() }
         setContent {
             val s by settings.settings.collectAsStateWithLifecycle(first)
+            val reviewCount by mail.reviewCount.collectAsStateWithLifecycle(0)
             val nav = rememberNavController()
             LaunchedEffect(Unit) { routes.receiveAsFlow().collect { nav.navigate(it) } }
             ReceiptBeatTheme(
@@ -75,6 +81,7 @@ class MainActivity : FragmentActivity() {
                     AppShell(
                         actions = AppActions(shareReceipt = { id -> lifecycleScope.launch { sharing.receipt(this@MainActivity, id) } }),
                         nav = nav,
+                        reviewBadge = reviewCount,
                         start = if (first.onboarded) HomeRoute else OnboardingRoute
                     )
                 }
@@ -94,13 +101,29 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun handle(intent: Intent) {
+        if (intent.action == Intent.ACTION_VIEW && intent.data != null && intent.getStringExtra("route") == null) {
+            val uri = intent.data!!
+            lifecycleScope.launch {
+                EmailImportWorker.start(this@MainActivity, mail, uri, LocalDate.of(1990, 1, 1), LocalDate.now().plusDays(1))
+                routes.trySend(ReviewRoute)
+            }
+            return
+        }
         when (intent.action) {
             Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
                 val uris = sharedUris(intent)
                 if (uris.isEmpty()) return
                 lifecycleScope.launch {
-                    pipeline.fromUris(uris.filter { contentResolver.getType(it) != "message/rfc822" }, Source.SHARE)
-                    routes.trySend(ReceiptsRoute("inbox"))
+                    // A saved email goes to Review like any other find. Photos and PDFs go straight to the Inbox.
+                    val (emails, files) = uris.partition {
+                        contentResolver.getType(it) == "message/rfc822" ||
+                            it.toString().endsWith(".eml", true)
+                    }
+                    emails.forEach {
+                        EmailImportWorker.start(this@MainActivity, mail, it, LocalDate.of(1990, 1, 1), LocalDate.now().plusDays(1))
+                    }
+                    if (files.isNotEmpty()) pipeline.fromUris(files, Source.SHARE)
+                    routes.trySend(if (files.isEmpty()) ReviewRoute else ReceiptsRoute("inbox"))
                 }
             }
         }

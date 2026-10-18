@@ -35,14 +35,15 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 **Gate:** you can run a full month of your own receipts through it without a spreadsheet
 
 ## Phase 3. Email for everyone
-- [ ] Add email receipts wizard with a step by step guide for each provider
-- [ ] Streaming import of .mbox, .eml, .zip, .pst and .olm with progress, resume and Message-ID dedupe
-- [ ] Header skim, rules scorer and field pull from schema markup, PDF attachments and body text
-- [ ] Gemini Nano pass for borderline emails while the app is on screen, with a queue for later
-- [ ] Email to PDF snapshot with remote images blocked
-- [ ] Review stack with grouping, swipe, bulk keep and sender rules
-- [ ] IMAP live connect with app passwords, and Outlook through Microsoft sign in
-- [ ] Remembered scan ranges, scheduled auto scans and scan log
+- [x] Add email receipts wizard with a step by step guide for each provider
+- [x] Streaming import of .mbox, .eml, .zip, .pst and .olm with progress, resume and Message-ID dedupe
+- [x] Header skim, rules scorer and field pull from schema markup, PDF attachments and body text
+- [x] Gemini Nano pass for borderline emails while the app is on screen, with a queue for later
+- [x] Email to PDF snapshot with remote images blocked
+- [x] Review stack with grouping, swipe, bulk keep and sender rules
+- [x] IMAP live connect with app passwords
+- [ ] Outlook through Microsoft sign in (needs your free Microsoft Entra app registration and client ID)
+- [x] Remembered scan ranges, scheduled auto scans and scan log
 
 **Gate:** a 12 month import from your own Gmail finds 90% of real receipts with few false hits, and the same works for one friend on Outlook or Yahoo
 
@@ -77,3 +78,4 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 - Phase 1: images are not converted to grayscale before OCR; ML Kit does its own. Coil was skipped; a small cached decoder reads the encrypted images.
 - Phase 1: optional cloud AI uses HttpURLConnection instead of Ktor (one less library).
 - Phase 2: Settings (categories with tax mapping and deductible %, payers, projects, AI, security, reminders, appearance, trash, about), onboarding with the intro video, daily reminder worker. Unpaid reminders use the receipt's last change date.
+- Phase 3: file import checked on emulator with a 6 email mbox: 4 receipts found, newsletter and personal mail skipped, kept emails become Inbox receipts. IMAP tested against GreenMail in unit tests; a real Gmail or Yahoo account still needs a manual check.
