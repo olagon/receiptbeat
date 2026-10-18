@@ -32,4 +32,4 @@ The full spec is in [docs/SPEC.md](docs/SPEC.md). Progress is in [docs/PROGRESS.
 
 ## License
 
-Apache 2.0. Intro music: "Life of Riley" by Kevin MacLeod (incompetech.com), licensed under CC BY 4.0.
+Apache 2.0. The intro music is an original track released under CC0 1.0.

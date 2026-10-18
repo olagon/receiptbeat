@@ -51,4 +51,4 @@ claimed for taxes. The full spec is docs/SPEC.md. It is the source of truth.
 - Paper #FEF7EC (receipt cards, light text on teal)
 - Logo: rounded square teal tile, cream receipt with a coral heartbeat line across it
 - The video uses Poppins for headings. Spec says Inter for UI. Use Poppins for display, Inter for body and amounts.
-- Intro music: "Life of Riley" by Kevin MacLeod (incompetech.com), CC BY 4.0. Keep the credit wherever the video ships.
+- Intro music: an original ukulele and marimba track (the same song as the hana local tour), CC0 1.0. No credit needed.

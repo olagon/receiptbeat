@@ -743,7 +743,7 @@ private val Licenses = """
     jsoup: MIT
     Kotlin and kotlinx: Apache 2.0
     Poppins and Inter fonts: SIL Open Font License 1.1
-    Intro music "Life of Riley" by Kevin MacLeod (incompetech.com), CC BY 4.0
+    Intro music: original track, CC0 1.0 (public domain)
 """.trimIndent()
 
 private fun open(context: Context, url: String) = context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))

@@ -292,11 +292,5 @@ private fun IntroVideo(close: () -> Unit) {
         IconButton(close, Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp)) {
             Icon(Icons.Rounded.Close, "Close video", tint = Color.White)
         }
-        Text(
-            "Music: Life of Riley by Kevin MacLeod (incompetech.com), CC BY 4.0",
-            Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(12.dp),
-            color = Color.White.copy(alpha = 0.6f),
-            style = MaterialTheme.typography.labelSmall,
-        )
     }
 }
