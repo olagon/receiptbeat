@@ -18,8 +18,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.kealohalabs.receiptbeat.capture.ReceiptPipeline
-import org.kealohalabs.receiptbeat.core.data.Settings
 import org.kealohalabs.receiptbeat.core.data.SettingsRepository
 import org.kealohalabs.receiptbeat.core.designsystem.ReceiptBeatTheme
 import org.kealohalabs.receiptbeat.core.designsystem.ThemeMode
@@ -27,6 +27,9 @@ import org.kealohalabs.receiptbeat.core.model.Source
 import org.kealohalabs.receiptbeat.ui.AppActions
 import org.kealohalabs.receiptbeat.ui.AppShell
 import org.kealohalabs.receiptbeat.ui.CaptureRoute
+import org.kealohalabs.receiptbeat.ui.HomeRoute
+import org.kealohalabs.receiptbeat.ui.MoneyRoute
+import org.kealohalabs.receiptbeat.ui.OnboardingRoute
 import org.kealohalabs.receiptbeat.ui.ReceiptsRoute
 import org.kealohalabs.receiptbeat.ui.ReviewRoute
 import org.kealohalabs.receiptbeat.ui.common.ImageLoader
@@ -52,28 +55,27 @@ class MainActivity : FragmentActivity() {
         lifecycleScope.launch {
             settings.settings.collect { s ->
                 if (s.secureScreen) {
-                    window.addFlags(
-                        WindowManager.LayoutParams.FLAG_SECURE
-                    )
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 } else {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 }
             }
         }
+        // Read once so the first frame knows whether to show onboarding.
+        val first = runBlocking { settings.current() }
         setContent {
-            val s by settings.settings.collectAsStateWithLifecycle(Settings())
+            val s by settings.settings.collectAsStateWithLifecycle(first)
             val nav = rememberNavController()
             LaunchedEffect(Unit) { routes.receiveAsFlow().collect { nav.navigate(it) } }
             ReceiptBeatTheme(
-                mode = runCatching {
-                    ThemeMode.valueOf(s.theme)
-                }.getOrDefault(ThemeMode.SYSTEM),
+                mode = runCatching { ThemeMode.valueOf(s.theme) }.getOrDefault(ThemeMode.SYSTEM),
                 dynamicColor = s.dynamicColor
             ) {
                 CompositionLocalProvider(LocalImageLoader provides images) {
                     AppShell(
                         actions = AppActions(shareReceipt = { id -> lifecycleScope.launch { sharing.receipt(this@MainActivity, id) } }),
-                        nav = nav
+                        nav = nav,
+                        start = if (first.onboarded) HomeRoute else OnboardingRoute
                     )
                 }
             }
@@ -109,6 +111,7 @@ class MainActivity : FragmentActivity() {
             "inbox" -> routes.trySend(ReceiptsRoute("inbox"))
             "ready" -> routes.trySend(ReceiptsRoute("ready"))
             "owed" -> routes.trySend(ReceiptsRoute("owed"))
+            "taxes" -> routes.trySend(MoneyRoute(taxes = true))
         }
     }
 

@@ -18,6 +18,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.kealohalabs.receiptbeat.core.data.ReceiptRepository
+import org.kealohalabs.receiptbeat.core.data.SettingsRepository
 import org.kealohalabs.receiptbeat.core.model.Confidence
 import org.kealohalabs.receiptbeat.core.model.ExtractionMethod
 import org.kealohalabs.receiptbeat.core.model.FileKind
@@ -38,11 +39,12 @@ class ReceiptPipeline @Inject constructor(
     private val images: ImageProcessor,
     private val ocr: Ocr,
     private val nano: NanoReader,
-    private val cloud: CloudReader
+    private val cloud: CloudReader,
+    private val settings: SettingsRepository,
 ) {
     /** Camera or photos: one receipt from one or more pages. Returns the new receipt id right away; reading runs in the background. */
     suspend fun fromImages(uris: List<Uri>, source: Source, stitch: Boolean, track: Track? = null): String = withContext(Dispatchers.IO) {
-        val r = repo.create(source, track ?: Track.PERSONAL)
+        val r = repo.create(source, track ?: defaultTrack())
         val saved = guard(r.id) { images.saveImages(r.id, uris, stitch) }
         repo.addFiles(saved.files)
         repo.setImageHash(r.id, saved.hash?.toULong()?.toString(16))
@@ -51,7 +53,7 @@ class ReceiptPipeline @Inject constructor(
     }
 
     suspend fun fromPdf(uri: Uri, source: Source): String = withContext(Dispatchers.IO) {
-        val r = repo.create(source)
+        val r = repo.create(source, defaultTrack())
         val saved = guard(r.id) { images.savePdf(r.id, uri) }
         repo.addFiles(saved.files)
         repo.setImageHash(r.id, saved.hash?.toULong()?.toString(16))
@@ -72,6 +74,16 @@ class ReceiptPipeline @Inject constructor(
     } catch (e: Exception) {
         repo.delete(listOf(id))
         throw e
+    }
+
+    /** Where new receipts go, from the onboarding choice. Merchant memory and payers can still change it. */
+    private suspend fun defaultTrack(): Track {
+        val s = settings.current()
+        return when {
+            s.useWork -> Track.REIMBURSABLE
+            s.useTaxes -> Track.TAX
+            else -> Track.PERSONAL
+        }
     }
 
     fun enqueue(id: String) {

@@ -15,3 +15,11 @@ import kotlinx.serialization.Serializable
 @Serializable data class ReceiptRoute(val id: String)
 
 @Serializable object SettingsRoute
+
+@Serializable object OnboardingRoute
+
+@Serializable object MailAccountsRoute
+
+@Serializable data class EmailWizardRoute(val provider: String? = null)
+
+@Serializable object BackupRoute

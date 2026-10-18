@@ -24,13 +24,13 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 **Gate:** totals at 90% or better on the test set, and capture to card under 3 seconds
 
 ## Phase 2. Tracking
-- [ ] Categories with tax mapping presets
-- [ ] Payers and projects
-- [ ] Tracks, statuses and the stepper in Receipt detail
-- [ ] Home dashboard with the three money tiles
-- [ ] Search, filters, duplicate detection
-- [ ] Merchant memory for smart suggestions
-- [ ] Reminders
+- [x] Categories with tax mapping presets
+- [x] Payers and projects
+- [x] Tracks, statuses and the stepper in Receipt detail
+- [x] Home dashboard with the three money tiles
+- [x] Search, filters, duplicate detection
+- [x] Merchant memory for smart suggestions
+- [x] Reminders
 
 **Gate:** you can run a full month of your own receipts through it without a spreadsheet
 
@@ -76,3 +76,4 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 - Phase 1: checked on emulator: import 3 rendered receipts, all totals, dates and merchants read correctly. Gemini Nano and the Document Scanner UI need a real phone to check.
 - Phase 1: images are not converted to grayscale before OCR; ML Kit does its own. Coil was skipped; a small cached decoder reads the encrypted images.
 - Phase 1: optional cloud AI uses HttpURLConnection instead of Ktor (one less library).
+- Phase 2: Settings (categories with tax mapping and deductible %, payers, projects, AI, security, reminders, appearance, trash, about), onboarding with the intro video, daily reminder worker. Unpaid reminders use the receipt's last change date.

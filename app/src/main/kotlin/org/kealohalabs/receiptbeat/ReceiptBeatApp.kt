@@ -12,6 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.kealohalabs.receiptbeat.capture.Notifications
 import org.kealohalabs.receiptbeat.capture.ReceiptPipeline
+import org.kealohalabs.receiptbeat.capture.ReminderWorker
 import org.kealohalabs.receiptbeat.core.data.CatalogRepository
 import org.kealohalabs.receiptbeat.core.data.ReceiptRepository
 
@@ -33,6 +34,7 @@ class ReceiptBeatApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         Notifications.createChannels(this)
+        ReminderWorker.schedule(this)
         scope.launch {
             // Plain copies made for sharing never outlive a session.
             File(cacheDir, "share").deleteRecursively()

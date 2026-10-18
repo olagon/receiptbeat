@@ -176,7 +176,7 @@ class ReceiptRepository @Inject constructor(
             receiptNumber = x.receiptNumber ?: r.receiptNumber,
             categoryId = r.categoryId ?: memory?.lastCategoryId ?: x.categoryGuess,
             payerId = r.payerId ?: memory?.lastPayerId,
-            track = if (r.payerId == null && r.track == Track.PERSONAL) memory?.lastTrack ?: payer?.defaultTrack ?: r.track else r.track,
+            track = if (r.payerId == null) memory?.lastTrack ?: payer?.defaultTrack ?: r.track else r.track,
             ocrText = ocrText ?: r.ocrText,
             reading = false,
             updatedAt = Instant.now()
