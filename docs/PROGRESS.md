@@ -4,12 +4,12 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 
 
 ## Phase 0. Repo and skeleton
-- [ ] Create the GitHub repo with README, LICENSE, CLAUDE.md, SECURITY.md, CONTRIBUTING.md, .gitignore
-- [ ] Set up Gradle modules, version catalog and convention plugins
-- [ ] Theme, colors, type and shared components in `core/designsystem`
-- [ ] Bottom bar with five empty tabs and the Capture button
-- [ ] Room database with SQLCipher and the core tables
-- [ ] GitHub Actions running lint, tests and a debug build
+- [x] Create the GitHub repo with README, LICENSE, CLAUDE.md, SECURITY.md, CONTRIBUTING.md, .gitignore
+- [x] Set up Gradle modules, version catalog and convention plugins
+- [x] Theme, colors, type and shared components in `core/designsystem`
+- [x] Bottom bar with five empty tabs and the Capture button
+- [x] Room database with SQLCipher and the core tables
+- [x] GitHub Actions running lint, tests and a debug build
 
 **Gate:** CI is green and the app opens on a real phone
 
@@ -68,3 +68,7 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 ## Notes
 
 - 2026-10-17: Repo files laid out. Intro video reviewed, matches spec, no changes needed.
+- Phase 0: modules are app, core/model, core/database, core/data, core/designsystem. Feature screens live as packages in app; extraction and mail become modules when their phase starts.
+- Phase 0: shared module setup lives in the root build.gradle.kts instead of a build-logic convention plugin. Same effect, fewer files.
+- Phase 0: Material 3 Expressive needs material3 1.4 (alpha). Using stable Material 3 with spring motion for now.
+- Phase 0: gate checked on an emulator (receiptbeat_test, API 36) because the phone could not pair yet.
