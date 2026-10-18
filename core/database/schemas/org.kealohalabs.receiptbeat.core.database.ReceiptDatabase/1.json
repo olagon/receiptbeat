@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a1fad55050d975b0707d11efd8dc5133",
+    "identityHash": "5c0267205c92b22a276c4f560a44532b",
     "entities": [
       {
         "tableName": "Receipt",
@@ -1078,7 +1078,7 @@
       },
       {
         "tableName": "EmailCandidate",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `accountId` TEXT, `importJobId` TEXT, `messageIdHash` TEXT NOT NULL, `needsAi` INTEGER NOT NULL, `sender` TEXT NOT NULL, `senderName` TEXT, `subject` TEXT NOT NULL, `snippet` TEXT NOT NULL, `receivedAt` INTEGER NOT NULL, `score` INTEGER NOT NULL, `amountCents` INTEGER, `currency` TEXT NOT NULL, `merchant` TEXT, `purchaseDate` INTEGER, `taxCents` INTEGER, `bodyText` TEXT, `filePath` TEXT, `state` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `accountId` TEXT, `importJobId` TEXT, `messageIdHash` TEXT NOT NULL, `needsAi` INTEGER NOT NULL, `sender` TEXT NOT NULL, `senderName` TEXT, `subject` TEXT NOT NULL, `snippet` TEXT NOT NULL, `receivedAt` INTEGER NOT NULL, `score` INTEGER NOT NULL, `amountCents` INTEGER, `currency` TEXT NOT NULL, `merchant` TEXT, `purchaseDate` INTEGER, `taxCents` INTEGER, `bodyText` TEXT, `filePath` TEXT, `fromSchema` INTEGER NOT NULL, `state` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -1178,6 +1178,12 @@
             "fieldPath": "filePath",
             "columnName": "filePath",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fromSchema",
+            "columnName": "fromSchema",
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "state",
@@ -1606,7 +1612,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a1fad55050d975b0707d11efd8dc5133')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5c0267205c92b22a276c4f560a44532b')"
     ]
   }
 }

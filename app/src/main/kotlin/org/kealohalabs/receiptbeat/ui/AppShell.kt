@@ -58,7 +58,7 @@ val Tabs = listOf(
 )
 
 @Composable
-fun AppShell(nav: NavHostController = rememberNavController(), reviewBadge: Int = 0) {
+fun AppShell(actions: AppActions, nav: NavHostController = rememberNavController(), reviewBadge: Int = 0) {
     val wide = LocalConfiguration.current.screenWidthDp >= 600
     val entry by nav.currentBackStackEntryAsState()
     val dest = entry?.destination
@@ -88,7 +88,7 @@ fun AppShell(nav: NavHostController = rememberNavController(), reviewBadge: Int 
                     }
                 }
             }
-            AppNavHost(nav, Modifier.weight(1f))
+            AppNavHost(nav, Modifier.weight(1f), actions)
         }
     } else {
         Scaffold(
@@ -97,7 +97,7 @@ fun AppShell(nav: NavHostController = rememberNavController(), reviewBadge: Int 
             },
             contentWindowInsets = WindowInsets(0)
         ) { pad ->
-            AppNavHost(nav, Modifier.padding(pad))
+            AppNavHost(nav, Modifier.padding(pad), actions)
         }
     }
 }

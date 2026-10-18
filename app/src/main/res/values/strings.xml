@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Receipt Beat</string>
+    <string name="shortcut_scan">Scan</string>
+    <string name="shortcut_import">Import</string>
+    <string name="shortcut_review">Review emails</string>
+    <string name="widget_description">Capture receipts and see what you are owed</string>
+    <string name="tile_label">Scan receipt</string>
 </resources>

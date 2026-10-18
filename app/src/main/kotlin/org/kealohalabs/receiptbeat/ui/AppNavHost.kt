@@ -9,15 +9,44 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
+import org.kealohalabs.receiptbeat.ui.capture.CaptureScreen
+import org.kealohalabs.receiptbeat.ui.detail.DetailScreen
+import org.kealohalabs.receiptbeat.ui.home.HomeScreen
+import org.kealohalabs.receiptbeat.ui.receipts.ReceiptsScreen
+
+/** Actions that need the Activity (share sheet, pickers). */
+data class AppActions(val shareReceipt: (String) -> Unit)
 
 @Composable
-fun AppNavHost(nav: NavHostController, modifier: Modifier) {
+fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions) {
+    val openReceipt: (String) -> Unit = { nav.navigate(ReceiptRoute(it)) }
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
-        composable<HomeRoute> { Placeholder("Home") }
-        composable<ReceiptsRoute> { Placeholder("Receipts") }
+        composable<HomeRoute> {
+            HomeScreen(
+                openList = { nav.navigate(ReceiptsRoute(it)) },
+                openReceipt = openReceipt,
+                openSettings = { nav.navigate(SettingsRoute) },
+                openReview = { nav.navigate(ReviewRoute) },
+                openMoney = { nav.navigate(MoneyRoute()) }
+            )
+        }
+        composable<ReceiptsRoute> { ReceiptsScreen(open = openReceipt) }
+        composable<ReceiptRoute> { DetailScreen(back = { nav.popBackStack() }, share = actions.shareReceipt) }
+        composable<CaptureRoute> {
+            val r = it.toRoute<CaptureRoute>()
+            CaptureScreen(
+                startMode = r.mode,
+                startImport = r.mode == "import",
+                back = { nav.popBackStack() },
+                done = {
+                    nav.popBackStack()
+                    nav.navigate(ReceiptsRoute("inbox"))
+                }
+            )
+        }
         composable<ReviewRoute> { Placeholder("Review") }
         composable<MoneyRoute> { Placeholder("Money") }
-        composable<CaptureRoute> { Placeholder("Capture") }
         composable<SettingsRoute> { Placeholder("Settings") }
     }
 }

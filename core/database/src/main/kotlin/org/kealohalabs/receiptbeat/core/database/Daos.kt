@@ -61,6 +61,9 @@ interface ReceiptDao {
     @Query("SELECT * FROM Receipt WHERE deletedAt IS NOT NULL")
     fun observeTrash(): Flow<List<Receipt>>
 
+    @Query("SELECT id FROM Receipt WHERE deletedAt IS NOT NULL AND deletedAt < :before")
+    suspend fun trashedBefore(before: Long): List<String>
+
     @Query("DELETE FROM Receipt WHERE deletedAt IS NOT NULL AND deletedAt < :before")
     suspend fun purgeDeleted(before: Long)
 
@@ -101,6 +104,9 @@ interface ReceiptDao {
     @Query("SELECT * FROM FieldConfidence WHERE receiptId = :receiptId")
     fun observeConfidences(receiptId: String): Flow<List<FieldConfidence>>
 
+    @Query("DELETE FROM FieldConfidence WHERE receiptId = :receiptId AND field = :field")
+    suspend fun deleteConfidence(receiptId: String, field: String)
+
     @Query("SELECT * FROM FieldConfidence WHERE confidence = 'LOW'")
     fun observeLowConfidence(): Flow<List<FieldConfidence>>
 
@@ -136,6 +142,9 @@ interface ReceiptDao {
 
     @Query("SELECT * FROM ReceiptEvent WHERE receiptId = :receiptId ORDER BY at DESC")
     fun observeEvents(receiptId: String): Flow<List<ReceiptEvent>>
+
+    @Query("SELECT * FROM ReceiptEvent WHERE receiptId = :receiptId")
+    suspend fun eventsFor(receiptId: String): List<ReceiptEvent>
 
     @Query("SELECT * FROM ReceiptEvent")
     suspend fun allEvents(): List<ReceiptEvent>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="scan" android:icon="@drawable/ic_shortcut_scan" android:shortcutShortLabel="@string/shortcut_scan">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="org.kealohalabs.receiptbeat" android:targetClass="org.kealohalabs.receiptbeat.MainActivity">
+            <extra android:name="route" android:value="capture" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="import" android:icon="@drawable/ic_shortcut_import" android:shortcutShortLabel="@string/shortcut_import">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="org.kealohalabs.receiptbeat" android:targetClass="org.kealohalabs.receiptbeat.MainActivity">
+            <extra android:name="route" android:value="import" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="review" android:icon="@drawable/ic_shortcut_review" android:shortcutShortLabel="@string/shortcut_review">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="org.kealohalabs.receiptbeat" android:targetClass="org.kealohalabs.receiptbeat.MainActivity">
+            <extra android:name="route" android:value="review" />
+        </intent>
+    </shortcut>
+</shortcuts>

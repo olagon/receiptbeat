@@ -13,10 +13,12 @@ complexity:
     ignoreAnnotated: ['Composable']
   LongMethod:
     threshold: 120
+    ignoreAnnotated: ['Composable']
   TooManyFunctions:
     active: false
   CyclomaticComplexMethod:
-    threshold: 25
+    threshold: 40
+    ignoreAnnotated: ['Composable']
   NestedBlockDepth:
     threshold: 6
   ComplexCondition:

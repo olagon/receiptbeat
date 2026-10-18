@@ -43,3 +43,4 @@ google-services.json
 .env.*
 .DS_Store
 .kotlin/
+.claude/worktrees/

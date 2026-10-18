@@ -237,8 +237,10 @@ data class EmailCandidate(
     val taxCents: Long? = null,
     /** Clean text of the email body, used for extraction and the PDF snapshot. */
     val bodyText: String? = null,
-    /** Path of a saved PDF attachment or snapshot, if any. */
+    /** Path of a saved PDF attachment, if any. */
     val filePath: String? = null,
+    /** Fields came from schema.org markup in the email, the most trusted source. */
+    val fromSchema: Boolean = false,
     val state: CandidateState = CandidateState.NEW
 )
 
