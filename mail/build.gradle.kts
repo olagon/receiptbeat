@@ -5,7 +5,6 @@ plugins {
 
 dependencies {
     api(project(":core:model"))
-    api(project(":extraction"))
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.mime4j.core)
     implementation(libs.mime4j.dom)
@@ -15,3 +14,5 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.greenmail)
 }
+
+tasks.test { maxHeapSize = "256m" }

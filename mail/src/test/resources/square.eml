@@ -1,0 +1,13 @@
+From: Kona Coffee <receipts@messaging.squareup.com>
+To: kai@example.com
+Subject: Receipt from Kona Coffee
+Date: Wed, 18 Mar 2026 07:05:00 -1000
+Message-ID: <square-1@squareup.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Kona Coffee
+Latte  $5.50
+Muffin $3.00
+Total $8.50
+Paid with Visa ending 1234

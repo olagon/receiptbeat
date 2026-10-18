@@ -1,0 +1,113 @@
+From MAILER-DAEMON Sat Mar 14 19:15:00 2026
+From: "Amazon.com" <auto-confirm@amazon.com>
+To: kai@example.com
+Subject: Your Amazon.com order #112-3456789-0123456
+Date: Sat, 14 Mar 2026 09:15:00 -1000
+Message-ID: <amazon-1@amazon.com>
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<html><head><style>body{color:red}</style>
+<script type="application/ld+json">
+{"@context":"http://schema.org","@type":"Order","merchant":{"@type":"Organization","name":"Amazon.com"},
+ "orderNumber":"112-3456789-0123456","orderDate":"2026-03-14T09:15:00-10:00","priceCurrency":"USD","price":"42.17",
+ "orderStatus":"http://schema.org/OrderProcessing"}
+</script></head>
+<body><img src="https://amazon.com/pixel.gif" width="1" height="1">
+<script>alert('x')</script>
+<p>Thanks for your order.</p>
+<table><tr><td>Item subtotal:</td><td>$39.00</td></tr>
+<tr><td>Order Total:</td><td>$45.99</td></tr></table>
+</body></html>
+
+From noreply@uber.com Wed Mar 18 05:42:10 2026
+From: Uber Receipts <noreply@uber.com>
+To: kai@example.com
+Subject: Your Tuesday evening trip with Uber
+Date: Tue, 17 Mar 2026 19:42:10 -1000
+Message-ID: <uber-1@uber.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset=UTF-8
+
+Total $23.45
+--b1
+Content-Type: text/html; charset=UTF-8
+
+<html><body onload="track()"><h1>Thanks for riding, Kai</h1>
+<table><tr><td>Trip fare</td><td>$20.10</td></tr>
+<tr><td>Sales Tax</td><td>$1.35</td></tr>
+<tr><td><b>Total</b></td><td><b>$23.45</b></td></tr></table>
+<img src="http://track.uber.com/open.png"><img src="cid:logo">
+<a href="javascript:steal()">x</a>
+</body></html>
+--b1--
+
+From receipts@messaging.squareup.com Wed Mar 18 17:05:00 2026
+From: Kona Coffee <receipts@messaging.squareup.com>
+To: kai@example.com
+Subject: Receipt from Kona Coffee
+Date: Wed, 18 Mar 2026 07:05:00 -1000
+Message-ID: <square-1@squareup.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Kona Coffee
+Latte  $5.50
+Muffin $3.00
+Total $8.50
+Paid with Visa ending 1234
+
+From news@deals.islandshop.example Thu Mar 19 20:00:00 2026
+From: Island Shop Deals <news@deals.islandshop.example>
+To: kai@example.com
+Subject: Fall Sale: 50% off everything this weekend
+Date: Thu, 19 Mar 2026 10:00:00 -1000
+Message-ID: <promo-77@islandshop.example>
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<html><body><h1>Our biggest sale of the year</h1><p>Shop now and save 50% off. Limited time deal.</p>
+<img src="https://deals.islandshop.example/hero.jpg">
+<a href="https://x.example/unsubscribe">Unsubscribe</a> | <a href="https://x.example/unsubscribe2">unsubscribe from all</a>
+</body></html>
+
+From leilani@example.org Fri Mar 20 22:30:00 2026
+From: Leilani <leilani@example.org>
+To: kai@example.com
+Subject: Lunch Saturday?
+Date: Fri, 20 Mar 2026 12:30:00 -1000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Hey Kai, want to grab lunch Saturday?
+
+>From now on I am picking the place: you chose last time.
+Talk soon
+
+From billing@acme-hosting.io Sun Mar 22 08:00:00 2026
+From: Acme Billing <billing@acme-hosting.io>
+To: kai@example.com
+Subject: =?UTF-8?B?SW52b2ljZSDihJYgMTA0MiBmb3IgTWFyY2g=?=
+Date: Sun, 22 Mar 2026 08:00:00 +0000
+Message-ID: <inv-1042@acme-hosting.io>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mix"
+
+--mix
+Content-Type: text/plain; charset=UTF-8
+
+Hi Kai,
+Please find your invoice attached.
+Invoice number: INV-1042
+Amount due: $120.00
+--mix
+Content-Type: application/pdf; name="invoice.pdf"
+Content-Disposition: attachment; filename="invoice.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iajw8Pj5lbmRvYmoKdHJhaWxlcjw8Pj4KJSVFT0YK
+--mix--
+

@@ -1,0 +1,22 @@
+From: Acme Billing <billing@acme-hosting.io>
+To: kai@example.com
+Subject: =?UTF-8?B?SW52b2ljZSDihJYgMTA0MiBmb3IgTWFyY2g=?=
+Date: Sun, 22 Mar 2026 08:00:00 +0000
+Message-ID: <inv-1042@acme-hosting.io>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mix"
+
+--mix
+Content-Type: text/plain; charset=UTF-8
+
+Hi Kai,
+Please find your invoice attached.
+Invoice number: INV-1042
+Amount due: $120.00
+--mix
+Content-Type: application/pdf; name="invoice.pdf"
+Content-Disposition: attachment; filename="invoice.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iajw8Pj5lbmRvYmoKdHJhaWxlcjw8Pj4KJSVFT0YK
+--mix--
