@@ -48,10 +48,11 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 **Gate:** a 12 month import from your own Gmail finds 90% of real receipts with few false hits, and the same works for one friend on Outlook or Yahoo
 
 ## Phase 4. Money, exports and backup
-- [ ] Reimburse view, report builder, PDF and CSV, mark paid (full and partial)
-- [ ] Taxes view, tax year ZIP, year lock
-- [ ] Google Drive app folder backup and restore
-- [ ] Full data export
+- [x] Reimburse view, report builder, PDF and CSV, mark paid (full and partial)
+- [x] Taxes view, tax year ZIP, year lock
+- [x] Backup and restore (save the ZIP to Google Drive or anywhere through the system picker)
+- [ ] Automatic Google Drive app folder backup (needs a Google Cloud OAuth client for your signing key)
+- [x] Full data export
 
 **Gate:** you submit one real reimbursement report built in Receipt Beat
 
@@ -79,3 +80,4 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 - Phase 1: optional cloud AI uses HttpURLConnection instead of Ktor (one less library).
 - Phase 2: Settings (categories with tax mapping and deductible %, payers, projects, AI, security, reminders, appearance, trash, about), onboarding with the intro video, daily reminder worker. Unpaid reminders use the receipt's last change date.
 - Phase 3: file import checked on emulator with a 6 email mbox: 4 receipts found, newsletter and personal mail skipped, kept emails become Inbox receipts. IMAP tested against GreenMail in unit tests; a real Gmail or Yahoo account still needs a manual check.
+- Phase 4: report TR-2026-001 built on the emulator: cover page, summary table, receipt pages, CSV. Partial payments fill the oldest receipts first. Backup ZIP is plain (not encrypted), the app says so.

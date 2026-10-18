@@ -53,7 +53,9 @@ class Sharing @Inject constructor(
         intent.putExtra(Intent.EXTRA_SUBJECT, subject)
         intent.clipData = ClipData.newRawUri(subject, uris[0]).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        activity.startActivity(Intent.createChooser(intent, "Share"))
+        val chooser = Intent.createChooser(intent, "Share")
+            .putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, arrayOf(android.content.ComponentName(activity, MainActivity::class.java)))
+        activity.startActivity(chooser)
     }
 
     fun uri(f: File): Uri = FileProvider.getUriForFile(context, "${context.packageName}.files", f)

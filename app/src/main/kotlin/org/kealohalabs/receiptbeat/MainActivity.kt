@@ -79,7 +79,10 @@ class MainActivity : FragmentActivity() {
             ) {
                 CompositionLocalProvider(LocalImageLoader provides images) {
                     AppShell(
-                        actions = AppActions(shareReceipt = { id -> lifecycleScope.launch { sharing.receipt(this@MainActivity, id) } }),
+                        actions = AppActions(
+                            shareReceipt = { id -> lifecycleScope.launch { sharing.receipt(this@MainActivity, id) } },
+                            shareFiles = { files, subject -> sharing.files(this@MainActivity, files, subject) },
+                        ),
                         nav = nav,
                         reviewBadge = reviewCount,
                         start = if (first.onboarded) HomeRoute else OnboardingRoute

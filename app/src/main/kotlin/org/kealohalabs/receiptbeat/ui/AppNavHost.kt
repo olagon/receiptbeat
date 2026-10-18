@@ -1,18 +1,16 @@
 package org.kealohalabs.receiptbeat.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import org.kealohalabs.receiptbeat.ui.backup.BackupScreen
 import org.kealohalabs.receiptbeat.ui.capture.CaptureScreen
 import org.kealohalabs.receiptbeat.ui.detail.DetailScreen
 import org.kealohalabs.receiptbeat.ui.home.HomeScreen
+import org.kealohalabs.receiptbeat.ui.money.MoneyScreen
 import org.kealohalabs.receiptbeat.ui.onboarding.OnboardingScreen
 import org.kealohalabs.receiptbeat.ui.receipts.ReceiptsScreen
 import org.kealohalabs.receiptbeat.ui.review.EmailWizard
@@ -22,7 +20,7 @@ import org.kealohalabs.receiptbeat.ui.settings.SettingsLinks
 import org.kealohalabs.receiptbeat.ui.settings.SettingsScreen
 
 /** Actions that need the Activity (share sheet, pickers). */
-data class AppActions(val shareReceipt: (String) -> Unit)
+data class AppActions(val shareReceipt: (String) -> Unit, val shareFiles: (List<java.io.File>, String) -> Unit)
 
 @Composable
 fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, start: Any = HomeRoute) {
@@ -54,7 +52,9 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, 
         composable<ReviewRoute> {
             ReviewScreen(addEmail = { nav.navigate(EmailWizardRoute()) }, accounts = { nav.navigate(MailAccountsRoute) })
         }
-        composable<MoneyRoute> { Placeholder("Money") }
+        composable<MoneyRoute> {
+            MoneyScreen(openReceipt = openReceipt, shareFiles = actions.shareFiles, startOnTaxes = it.toRoute<MoneyRoute>().taxes)
+        }
         composable<SettingsRoute> {
             SettingsScreen(
                 back = { nav.popBackStack() },
@@ -84,11 +84,6 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, 
                 },
             )
         }
-        composable<BackupRoute> { Placeholder("Backup") }
+        composable<BackupRoute> { BackupScreen(back = { nav.popBackStack() }, share = actions.shareFiles) }
     }
-}
-
-@Composable
-private fun Placeholder(name: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(name) }
 }
