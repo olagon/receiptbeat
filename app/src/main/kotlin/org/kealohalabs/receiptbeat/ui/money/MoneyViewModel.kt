@@ -35,7 +35,10 @@ data class MoneyState(
     val celebrate: Boolean = false,
     val message: String? = null
 ) {
-    val owedCents get() = payers.sumOf { it.submittedCents }
+    /** Same as Home: money you are out, whether submitted yet or not. */
+    val owedCents get() = toSubmitCents + waitingCents
+    val toSubmitCents get() = payers.sumOf { it.readyCents }
+    val waitingCents get() = payers.sumOf { it.submittedCents }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

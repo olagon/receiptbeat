@@ -136,7 +136,7 @@ fun SettingsScreen(back: () -> Unit, links: SettingsLinks, vm: SettingsViewModel
                 Page.REMINDERS -> Reminders(s, vm)
                 Page.APPEARANCE -> Appearance(s, vm)
                 Page.TRASH -> Trash(s, vm)
-                Page.ABOUT -> About()
+                Page.ABOUT -> About(vm)
             }
         }
     }
@@ -716,7 +716,7 @@ private fun Trash(s: SettingsState, vm: SettingsViewModel) {
 }
 
 @Composable
-private fun About() {
+private fun About(vm: SettingsViewModel) {
     val context = LocalContext.current
     Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Receipt Beat", style = MaterialTheme.typography.headlineSmall)
@@ -725,6 +725,7 @@ private fun About() {
         TextButton({ open(context, "https://github.com/olagon/receiptbeat") }) { Text("github.com/olagon/receiptbeat") }
         TextButton({ open(context, "https://github.com/olagon/receiptbeat/issues") }) { Text("Report a problem") }
         TextButton({ copyLog(context) }) { Text("Copy debug log") }
+        if (BuildConfig.DEBUG) TextButton(vm::addSampleData) { Text("Add sample receipts (test builds only)") }
         HorizontalDivider()
         Text("Open source licenses", style = MaterialTheme.typography.titleSmall)
         Text(Licenses, style = MaterialTheme.typography.bodySmall)

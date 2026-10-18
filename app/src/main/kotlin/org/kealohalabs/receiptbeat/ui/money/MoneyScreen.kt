@@ -198,6 +198,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.reimburseItems(
             Column(Modifier.padding(20.dp)) {
                 Text("Owed to you", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MoneyText(s.owedCents, style = MoneyStyle.Hero, currency = s.homeCurrency, hidden = s.hideAmounts)
+                Text(
+                    if (s.hideAmounts) {
+                        "To submit and waiting on payment"
+                    } else {
+                        "${Money.format(
+                            s.toSubmitCents,
+                            s.homeCurrency
+                        )} to submit · ${Money.format(s.waitingCents, s.homeCurrency)} waiting on payment"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

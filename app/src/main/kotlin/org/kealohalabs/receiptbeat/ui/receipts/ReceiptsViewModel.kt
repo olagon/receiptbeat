@@ -65,7 +65,19 @@ data class ReceiptFilter(
             "owed" -> ReceiptFilter(statuses = setOf(Status.SUBMITTED, Status.PARTLY_REIMBURSED), track = Track.REIMBURSABLE)
             "deductible" -> ReceiptFilter(track = Track.TAX, from = LocalDate.now().withDayOfYear(1))
             "attention" -> ReceiptFilter(needsLook = true)
-            else -> ReceiptFilter()
+            "paid" -> ReceiptFilter(statuses = setOf(Status.REIMBURSED, Status.PARTLY_REIMBURSED), track = Track.REIMBURSABLE)
+            else -> when {
+                // "category:meals" or "from:2026-10-01" from the dashboard charts
+                name?.startsWith("category:") == true -> ReceiptFilter(categoryId = name.substringAfter(':').ifBlank { null })
+                name?.startsWith("from:") == true -> ReceiptFilter(
+                    from = runCatching {
+                        LocalDate.parse(name.substringAfter(':'))
+                    }.getOrNull()
+                )
+                name?.startsWith("month:") == true -> runCatching { YearMonth.parse(name.substringAfter(':')) }.getOrNull()
+                    ?.let { ReceiptFilter(from = it.atDay(1), to = it.atEndOfMonth()) } ?: ReceiptFilter()
+                else -> ReceiptFilter()
+            }
         }
     }
 }

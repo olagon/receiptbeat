@@ -46,6 +46,8 @@ data class Receipt(
     val track: Track = Track.PERSONAL,
     val status: Status = Status.INBOX,
     val reimbursedCents: Long? = null,
+    /** When money last came in for this receipt. Powers "Paid back" by month, quarter or year. */
+    val reimbursedAt: Instant? = null,
     val taxYear: Int? = null,
     val locked: Boolean = false,
     val notes: String? = null,

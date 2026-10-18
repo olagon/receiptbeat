@@ -36,8 +36,8 @@ import org.kealohalabs.receiptbeat.core.model.Split
 import org.kealohalabs.receiptbeat.core.model.TaxLine
 
 @Database(
-    version = 2,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    version = 3,
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
     exportSchema = true,
     entities = [
         Receipt::class, ReceiptFts::class, ReceiptFile::class, FieldConfidence::class, LineItem::class, Split::class,

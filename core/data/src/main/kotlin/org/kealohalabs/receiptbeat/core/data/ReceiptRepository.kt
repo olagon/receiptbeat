@@ -88,7 +88,7 @@ class ReceiptRepository @Inject constructor(
                     (it.status == Status.READY || it.status == Status.INBOX || it.status == Status.REJECTED)
             }
             Dashboard(
-                owedCents = owedItems.sumOf { owed(it) },
+                owedCents = owedItems.sumOf { owed(it) } + ready.sumOf { it.totalCents ?: 0 },
                 owedByPayer = owedItems.groupBy { it.payerId }.mapValues { (_, v) -> v.sumOf { owed(it) } },
                 readyCents = ready.sumOf { it.totalCents ?: 0 },
                 readyCount = ready.size,
@@ -292,6 +292,11 @@ class ReceiptRepository @Inject constructor(
                     r.copy(
                         status = status,
                         reimbursedCents = reimbursed,
+                        reimbursedAt = when (status) {
+                            Status.REIMBURSED -> Instant.now()
+                            Status.READY, Status.INBOX, Status.SUBMITTED -> null
+                            else -> r.reimbursedAt
+                        },
                         taxYear = taxYear,
                         rejectReason = if (status == Status.REJECTED) note else r.rejectReason,
                         updatedAt = Instant.now()
@@ -324,7 +329,7 @@ class ReceiptRepository @Inject constructor(
         val r = dao.get(id) ?: return
         val total = r.totalCents ?: cents
         val status = if (cents >= total) Status.REIMBURSED else Status.PARTLY_REIMBURSED
-        dao.upsert(r.copy(status = status, reimbursedCents = cents, updatedAt = Instant.now()))
+        dao.upsert(r.copy(status = status, reimbursedCents = cents, reimbursedAt = Instant.now(), updatedAt = Instant.now()))
         event(id, "Paid ${Money.format(cents, r.currency)}")
     }
 

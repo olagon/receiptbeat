@@ -104,6 +104,8 @@ class SettingsViewModel @Inject constructor(
 
     fun restore(r: Receipt) = launch { receipts.restore(listOf(r.id)) }
 
+    fun addSampleData() = launch { SampleData.add(receipts, catalog) }
+
     fun setAiKey(provider: AiProvider, key: String?) = launch {
         if (key.isNullOrBlank()) secrets.remove(SecretStore.AI_KEY) else secrets.put(SecretStore.AI_KEY, key.trim())
         settings.update { it.copy(aiProvider = if (key.isNullOrBlank()) AiProvider.NONE else provider) }

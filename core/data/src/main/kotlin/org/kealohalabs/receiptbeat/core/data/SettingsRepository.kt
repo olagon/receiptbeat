@@ -38,7 +38,8 @@ data class Settings(
     val retentionYears: Int = 7,
     val useWork: Boolean = true,
     val useTaxes: Boolean = false,
-    val useHousehold: Boolean = false
+    val useHousehold: Boolean = false,
+    val dashPeriod: String = "MONTH"
 )
 
 @Singleton
@@ -64,6 +65,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val useWork = booleanPreferencesKey("useWork")
         val useTaxes = booleanPreferencesKey("useTaxes")
         val useHousehold = booleanPreferencesKey("useHousehold")
+        val dashPeriod = stringPreferencesKey("dashPeriod")
     }
 
     val settings: Flow<Settings> = context.store.data.map { p -> p.toSettings() }
@@ -93,6 +95,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             p[K.useWork] = s.useWork
             p[K.useTaxes] = s.useTaxes
             p[K.useHousehold] = s.useHousehold
+            p[K.dashPeriod] = s.dashPeriod
         }
     }
 
@@ -118,7 +121,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             retentionYears = this[K.retentionYears] ?: d.retentionYears,
             useWork = this[K.useWork] ?: d.useWork,
             useTaxes = this[K.useTaxes] ?: d.useTaxes,
-            useHousehold = this[K.useHousehold] ?: d.useHousehold
+            useHousehold = this[K.useHousehold] ?: d.useHousehold,
+            dashPeriod = this[K.dashPeriod] ?: d.dashPeriod
         )
     }
 }
