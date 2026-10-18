@@ -93,10 +93,11 @@ fun MoneyText(
     currency: String = "USD",
     style: TextStyle = MoneyStyle.Row,
     color: Color = LocalExtraColors.current.money,
-    hidden: Boolean = false
+    hidden: Boolean = false,
+    emptyText: String = "No total"
 ) {
     val text = when {
-        cents == null -> "No total"
+        cents == null -> emptyText
         hidden -> "•••"
         else -> Money.format(cents, currency)
     }

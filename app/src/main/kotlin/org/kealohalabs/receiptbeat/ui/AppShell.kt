@@ -64,11 +64,16 @@ fun AppShell(actions: AppActions, nav: NavHostController = rememberNavController
     val dest = entry?.destination
     val showBars = Tabs.any { t -> dest?.hasRoute(t.route::class) == true }
     val select: (Tab) -> Unit = { t ->
-        nav.navigate(t.route) {
-            // Home is always the root, so every tab pops back to it and keeps its own place.
-            popUpTo<HomeRoute> { saveState = true }
-            launchSingleTop = true
-            restoreState = true
+        if (t.route == HomeRoute) {
+            // Home is the root. Going home always clears whatever was opened on top, like a list from a dashboard chart.
+            nav.popBackStack(HomeRoute, inclusive = false)
+        } else {
+            nav.navigate(t.route) {
+                // Every other tab pops back to Home and keeps its own place.
+                popUpTo<HomeRoute> { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
         }
     }
     val capture = { nav.navigate(CaptureRoute()) }

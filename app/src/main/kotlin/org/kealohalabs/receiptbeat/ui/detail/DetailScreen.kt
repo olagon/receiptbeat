@@ -520,7 +520,7 @@ private fun MoneyRow(
             style = MaterialTheme.typography.labelLarge,
             color = if (low) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
         )
-        MoneyText(cents, currency = currency, style = if (big) MoneyStyle.Large else MoneyStyle.Row, hidden = hide)
+        MoneyText(cents, currency = currency, style = if (big) MoneyStyle.Large else MoneyStyle.Row, hidden = hide, emptyText = "Add")
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 }
