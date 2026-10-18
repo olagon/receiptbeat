@@ -81,6 +81,7 @@ fun MailAccountsScreen(back: () -> Unit, add: () -> Unit, vm: ReviewViewModel = 
         },
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(16.dp, 0.dp, 16.dp, 48.dp)) {
+            if (s.accounts.isNotEmpty()) item { BackgroundCard() }
             if (s.accounts.isEmpty()) {
                 item {
                     Text("No connected accounts. You can still import email files.", Modifier.padding(vertical = 12.dp))
@@ -310,6 +311,47 @@ private fun SearchDialog(a: MailAccount, gmail: Boolean, vm: ReviewViewModel, cl
         DateDialog(from, { pickDate = false }) {
             if (it != null) from = it
             pickDate = false
+        }
+    }
+}
+
+/**
+ * Long scans and nightly scans need the phone to let the app run in the background.
+ * Samsung and other phones can put apps to sleep, so this shows the state and opens the right screen.
+ */
+@Composable
+private fun BackgroundCard() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val power = context.getSystemService(android.os.PowerManager::class.java)
+    var free by remember { mutableStateOf(power.isIgnoringBatteryOptimizations(context.packageName)) }
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    // Check again when the user comes back from the system screen.
+    LaunchedEffect(lifecycle) {
+        lifecycle.lifecycle.currentStateFlow.collect { free = power.isIgnoringBatteryOptimizations(context.packageName) }
+    }
+    AppCard(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Column(Modifier.padding(16.dp)) {
+            Text(if (free) "Scans can run in the background" else "Let scans keep running", style = MaterialTheme.typography.titleSmall)
+            Text(
+                if (free) {
+                    "Your phone will not put Receipt Beat to sleep, so long and nightly scans can finish."
+                } else {
+                    "Your phone may put Receipt Beat to sleep and stop long or nightly scans. " +
+                        "Tap below, then choose Battery and set it to Unrestricted."
+                },
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (!free) {
+                OutlinedButton(
+                    {
+                        context.startActivity(
+                            android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                .setData(android.net.Uri.parse("package:${context.packageName}")),
+                        )
+                    },
+                    Modifier.padding(top = 8.dp),
+                ) { Text("Open battery settings for Receipt Beat") }
+            }
         }
     }
 }
