@@ -86,6 +86,7 @@ import org.kealohalabs.receiptbeat.core.model.EmailCandidate
 import org.kealohalabs.receiptbeat.core.model.JobStatus
 import org.kealohalabs.receiptbeat.core.model.Money
 import org.kealohalabs.receiptbeat.ui.common.pretty
+import org.kealohalabs.receiptbeat.ui.common.rememberAskNotifications
 import org.kealohalabs.receiptbeat.ui.detail.PickSheet
 
 private val DayFmt = DateTimeFormatter.ofPattern("MMM d")
@@ -103,6 +104,9 @@ fun ReviewScreen(addEmail: () -> Unit, accounts: () -> Unit, vm: ReviewViewModel
         scope.launch { if (snack.showSnackbar("Skipped ${ids.size}", "Undo") == SnackbarResult.ActionPerformed) vm.unskip(ids) }
     }
     LaunchedEffect(s.count) { vm.finishWithAi() }
+    // Someone with a connected account should see scan notifications. Asked once, when it first matters.
+    val askNotifications = rememberAskNotifications()
+    LaunchedEffect(s.accounts.isNotEmpty()) { if (s.accounts.isNotEmpty()) askNotifications() }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snack) },
@@ -219,6 +223,7 @@ private fun Header(s: ReviewState, addEmail: () -> Unit, accounts: () -> Unit, v
                 )
             }
         }
+        s.scanning?.let { live -> ScanningCard(live) }
         s.jobs.filter { it.status == JobStatus.RUNNING || it.status == JobStatus.PAUSED || it.status == JobStatus.FAILED }.forEach { j ->
             AppCard(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Column(Modifier.padding(12.dp)) {
@@ -402,6 +407,35 @@ private fun SwipeStack(c: EmailCandidate, left: Int, keep: () -> Unit, skip: () 
         Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             OutlinedButton(skip, Modifier.width(140.dp).height(52.dp)) { Text("Skip") }
             Button(keep, Modifier.width(140.dp).height(52.dp)) { Text("Keep") }
+        }
+    }
+}
+
+/** Shows the scan is alive: what it is doing, how far along, and what it found so far. */
+@Composable
+private fun ScanningCard(live: LiveScan) {
+    AppCard(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Column(Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.material3.CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(8.dp))
+                Text("Checking email", style = MaterialTheme.typography.titleSmall)
+            }
+            Text(
+                if (live.total > 0) "${live.stage}: ${live.done} of ${live.total} emails" else "${live.stage}...",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Text(
+                "${live.found} receipts found so far. Nothing leaves your phone. You can leave this screen.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (live.total > 0) {
+                LinearProgressIndicator({ live.done.toFloat() / live.total }, Modifier.fillMaxWidth().padding(top = 6.dp))
+            } else {
+                LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 6.dp))
+            }
         }
     }
 }

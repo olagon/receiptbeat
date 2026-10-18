@@ -173,7 +173,13 @@ class MailScanWorker @AssistedInject constructor(
         if (trigger == ScanTrigger.MANUAL) setForeground(Notifications.working(applicationContext, "Checking ${account.email}"))
         val auto = mail.autoScanFor(accountId)
         val from = inputData.getString("from")?.let(LocalDate::parse) ?: account.scanFrom
-        var run = ScanRun(accountId = accountId, trigger = trigger)
+        // A scan that stopped partway left its place: "folder:uid". Skip what it already checked.
+        val stopped = mail.lastRun(accountId)?.takeIf { it.finishedAt == null || it.error != null }
+        if (stopped != null && stopped.finishedAt == null) {
+            mail.saveRun(stopped.copy(finishedAt = Instant.now(), error = "Stopped partway. Picked up by the next scan."))
+        }
+        val resume = stopped?.resumeToken?.split(":")?.takeIf { it.size == 2 }?.let { it[0] to (it[1].toLongOrNull() ?: 0L) }
+        var run = ScanRun(accountId = accountId, trigger = trigger, resumeToken = resume?.let { "${it.first}:${it.second}" })
         mail.saveRun(run)
         val ctx = ScanContext(
             from,
@@ -187,17 +193,24 @@ class MailScanWorker @AssistedInject constructor(
             ImapClient(
                 ImapConfig(account.imapHost, account.imapPort, account.email, secret, xoauth2 = account.auth == MailAuth.MICROSOFT)
             ).use { imap ->
+                report(run, "", 0, "Connecting to ${account.email}")
                 imap.connect()
                 val lastUids = parseUids(account.lastUidByFolder).toMutableMap()
                 for (folder in folders(imap)) {
+                    report(run, folder, 0, "Searching $folder")
                     // First fill any date gaps not searched before, then ask only for mail newer than the last seen.
                     val uids = linkedSetOf<Long>()
                     val gaps = mail.gaps(accountId, folder, from, LocalDate.now())
                     gaps.forEach { (a, b) -> uids += imap.search(folder, a, b) }
                     lastUids[folder]?.let { uids += imap.uidsAfter(folder, it) }
+                    if (resume?.first == folder) uids.removeAll { it <= resume.second }
+                    val toCheck = uids.size
+                    var done = 0
                     for (batch in uids.sorted().chunked(BATCH)) {
                         if (isStopped) break
+                        report(run, folder, toCheck, "Reading $folder", done)
                         run = scanBatch(imap, folder, batch, ctx, run)
+                        done += batch.size
                         lastUids[folder] = maxOf(lastUids[folder] ?: 0, batch.max())
                         mail.saveRun(run)
                     }
@@ -219,6 +232,24 @@ class MailScanWorker @AssistedInject constructor(
         } catch (e: Exception) {
             android.util.Log.w("ReceiptBeat", "Scan failed", e)
             fail(run, friendly(e))
+        }
+    }
+
+    /** Live progress for the Review screen and the notification. */
+    private suspend fun report(run: ScanRun, folder: String, total: Int, stage: String, done: Int = 0) {
+        setProgress(
+            workDataOf(
+                "checked" to run.checked,
+                "found" to run.found,
+                "total" to total,
+                "done" to done,
+                "folder" to folder,
+                "stage" to stage,
+            ),
+        )
+        if (inputData.getBoolean("manual", false)) {
+            val text = if (total > 0) "$done of $total emails checked, ${run.found} receipts found" else stage
+            setForeground(Notifications.working(applicationContext, text, if (total > 0) done * 100 / total else null))
         }
     }
 
@@ -265,6 +296,7 @@ class MailScanWorker @AssistedInject constructor(
     override suspend fun getForegroundInfo() = Notifications.working(applicationContext, "Checking email")
 
     companion object {
+        const val TAG = "mailscan"
         private const val BATCH = 50
         private const val WEEK = 7
         private const val SUMMARY_ID = 3001
@@ -283,6 +315,8 @@ class MailScanWorker @AssistedInject constructor(
 
         fun scanNow(context: Context, accountId: String, from: LocalDate? = null) {
             val req = OneTimeWorkRequestBuilder<MailScanWorker>()
+                .addTag(TAG)
+                .addTag(accountId)
                 .setInputData(workDataOf("account" to accountId, "manual" to true, "from" to from?.toString()))
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .build()
@@ -306,6 +340,8 @@ class MailScanWorker @AssistedInject constructor(
             var next = now.withHour(s.preferredHour).withMinute(0)
             if (next.isBefore(now)) next = next.plusDays(1)
             val req = PeriodicWorkRequestBuilder<MailScanWorker>(hours, TimeUnit.HOURS)
+                .addTag(TAG)
+                .addTag(account.id)
                 .setInitialDelay(Duration.between(now, next))
                 .setInputData(workDataOf("account" to account.id))
                 .setConstraints(

@@ -115,6 +115,8 @@ class MailRepository @Inject constructor(
 
     suspend fun saveRun(r: ScanRun) = dao.upsertRun(r)
 
+    suspend fun lastRun(accountId: String) = dao.lastRun(accountId)
+
     suspend fun autoScanFor(accountId: String) = dao.autoScan(accountId) ?: AutoScanSettings(accountId)
 
     suspend fun saveAutoScan(s: AutoScanSettings) = dao.upsertAutoScan(s)

@@ -124,6 +124,7 @@ fun HomeScreen(
             (d?.lowConfidenceCount ?: 0).takeIf {
                 it > 0
             }?.let { Triple("$it need a check", "Some fields were hard to read") { openList("attention") } },
+            if (s.scanning) Triple("Checking email now", "Tap to see progress") { openReview() } else null,
             s.reviewCount.takeIf { it > 0 }?.let { Triple("$it found in email", "Keep or skip them") { openReview() } },
             s.overdueReports.takeIf { it > 0 }?.let { Triple("$it reports unpaid", "Time to follow up") { openMoney() } }
         )

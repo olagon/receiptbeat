@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -39,6 +42,9 @@ data class SenderGroup(val sender: String, val name: String, val items: List<Ema
     val totalCents get() = items.sumOf { it.amountCents ?: 0 }
 }
 
+/** A scan that is running right now, from WorkManager's live progress. */
+data class LiveScan(val stage: String, val checked: Int, val found: Int, val done: Int, val total: Int)
+
 data class ReviewState(
     val groups: List<SenderGroup> = emptyList(),
     val count: Int = 0,
@@ -52,6 +58,7 @@ data class ReviewState(
     val autoScan: Map<String, AutoScanSettings> = emptyMap(),
     val selected: Set<String> = emptySet(),
     val aiWorking: Boolean = false,
+    val scanning: LiveScan? = null,
 )
 
 @HiltViewModel
@@ -64,7 +71,19 @@ class ReviewViewModel @Inject constructor(
     private val selected = MutableStateFlow<Set<String>>(emptySet())
     private val ai = MutableStateFlow(false)
 
-    val state: StateFlow<ReviewState> = combine(
+    private val live = WorkManager.getInstance(context).getWorkInfosByTagFlow(MailScanWorker.TAG).map { infos ->
+        infos.firstOrNull { it.state == WorkInfo.State.RUNNING }?.progress?.let { p ->
+            LiveScan(
+                p.getString("stage") ?: "Starting",
+                p.getInt("checked", 0),
+                p.getInt("found", 0),
+                p.getInt("done", 0),
+                p.getInt("total", 0),
+            )
+        }
+    }
+
+    private val base: kotlinx.coroutines.flow.Flow<ReviewState> = combine(
         mail.candidates,
         combine(catalog.categories, catalog.payers, catalog.senderRules) { c, p, r -> Triple(c, p, r) },
         combine(mail.accounts, mail.jobs, mail.ranges, mail.runs, mail.autoScan) { a, j, r, runs, auto -> listOf(a, j, r, runs, auto) },
@@ -89,7 +108,10 @@ class ReviewViewModel @Inject constructor(
             selected = sel,
             aiWorking = aiOn,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReviewState())
+    }
+
+    val state: StateFlow<ReviewState> = combine(base, live) { b, l -> b.copy(scanning = l) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReviewState())
 
     /** The app is on screen, so the on device AI can decide on borderline emails now. */
     fun finishWithAi() {

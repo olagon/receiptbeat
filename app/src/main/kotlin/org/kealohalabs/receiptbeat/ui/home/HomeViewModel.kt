@@ -25,7 +25,8 @@ data class HomeState(
     val name: String = "",
     val hideAmounts: Boolean = false,
     val reviewCount: Int = 0,
-    val overdueReports: Int = 0
+    val overdueReports: Int = 0,
+    val scanning: Boolean = false
 )
 
 @HiltViewModel
@@ -42,6 +43,6 @@ class HomeViewModel @Inject constructor(
         settings.settings,
         extras.counts
     ) { d, rt, cp, s, x ->
-        HomeState(d, rt.first, rt.second, cp.first, cp.second, s.userName, s.hideAmounts, x.first, x.second)
+        HomeState(d, rt.first, rt.second, cp.first, cp.second, s.userName, s.hideAmounts, x.reviewCount, x.overdue, x.scanning)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeState())
 }

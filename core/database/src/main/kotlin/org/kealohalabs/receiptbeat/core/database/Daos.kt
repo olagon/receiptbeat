@@ -317,6 +317,9 @@ interface MailDao {
 
     @Upsert suspend fun upsertRun(item: ScanRun)
 
+    @Query("SELECT * FROM ScanRun WHERE accountId = :accountId ORDER BY startedAt DESC LIMIT 1")
+    suspend fun lastRun(accountId: String): ScanRun?
+
     @Query("SELECT * FROM AutoScanSettings WHERE accountId = :accountId")
     suspend fun autoScan(accountId: String): AutoScanSettings?
 

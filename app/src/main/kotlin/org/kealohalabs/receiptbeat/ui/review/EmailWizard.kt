@@ -56,6 +56,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import java.time.LocalDate
 import org.kealohalabs.receiptbeat.core.designsystem.AppCard
 import org.kealohalabs.receiptbeat.mail.ImapClient
+import org.kealohalabs.receiptbeat.ui.common.rememberAskNotifications
 
 /** How to get mail out of each provider, in plain words. From the spec's provider table. */
 data class Provider(
@@ -196,6 +197,7 @@ fun EmailWizard(start: String?, back: () -> Unit, done: () -> Unit, vm: ReviewVi
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var busy by rememberSaveable { mutableStateOf(false) }
     val p = Providers.firstOrNull { it.key == provider }
+    val askNotifications = rememberAskNotifications()
     BackHandler(p != null) { provider = null }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -270,7 +272,12 @@ fun EmailWizard(start: String?, back: () -> Unit, done: () -> Unit, vm: ReviewVi
             if (p.exportSteps == null || connecting) {
                 Section(Icons.Rounded.Link, "Connect the account", "New receipts are found on a schedule, hands free. Read only.")
                 Steps(p.connectSteps)
-                if (p.canConnect) Connect(p, range, vm, { busy = it }, busy, done) { error = it }
+                if (p.canConnect) {
+                    Connect(p, range, vm, {
+                        busy = it
+                        if (it) askNotifications()
+                    }, busy, done) { error = it }
+                }
             }
             if (!p.canConnect && p.exportSteps != null) {
                 Text(

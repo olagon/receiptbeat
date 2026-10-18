@@ -89,6 +89,17 @@
             <meta-data android:name="androidx.work.WorkManagerInitializer" tools:node="remove" />
         </provider>
 
+        <!-- No tracking: ML Kit bundles Google's usage log uploader (datatransport). Strip it so nothing phones home. -->
+        <service
+            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+            tools:node="remove" />
+        <service
+            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+            tools:node="remove" />
+        <receiver
+            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+            tools:node="remove" />
+
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
