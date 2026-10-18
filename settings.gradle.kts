@@ -25,5 +25,7 @@ include(
     ":core:model",
     ":core:database",
     ":core:data",
-    ":core:designsystem"
+    ":core:designsystem",
+    ":extraction",
+    ":mail"
 )
