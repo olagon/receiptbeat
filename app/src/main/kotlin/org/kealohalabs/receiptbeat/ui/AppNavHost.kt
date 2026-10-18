@@ -27,6 +27,7 @@ import org.kealohalabs.receiptbeat.ui.review.MailAccountsScreen
 import org.kealohalabs.receiptbeat.ui.review.ReviewScreen
 import org.kealohalabs.receiptbeat.ui.settings.SettingsLinks
 import org.kealohalabs.receiptbeat.ui.settings.SettingsScreen
+import org.kealohalabs.receiptbeat.ui.trips.TripsScreen
 
 /** Actions that need the Activity (share sheet, pickers). */
 data class AppActions(val shareReceipt: (String) -> Unit, val shareFiles: (List<java.io.File>, String) -> Unit)
@@ -41,7 +42,8 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions) 
                 openReceipt = openReceipt,
                 openSettings = { nav.navigate(SettingsRoute) },
                 openReview = { nav.go(ReviewRoute) },
-                openMoney = { nav.go(MoneyRoute()) }
+                openMoney = { nav.go(MoneyRoute()) },
+                openTrips = { nav.navigate(TripsRoute) }
             )
         }
         composable<ReceiptsRoute> {
@@ -114,6 +116,9 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions) 
                     nav.go(ReviewRoute)
                 },
             )
+        }
+        composable<TripsRoute> {
+            TripsScreen(back = { nav.popBackStack() }, openList = { nav.navigate(ReceiptsRoute(it)) }, shareFiles = actions.shareFiles)
         }
         composable<BackupRoute> { BackupScreen(back = { nav.popBackStack() }, share = actions.shareFiles) }
     }

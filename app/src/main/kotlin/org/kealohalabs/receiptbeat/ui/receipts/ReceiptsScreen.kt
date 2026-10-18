@@ -71,6 +71,7 @@ import org.kealohalabs.receiptbeat.core.designsystem.EmptyState
 import org.kealohalabs.receiptbeat.core.designsystem.MoneyStyle
 import org.kealohalabs.receiptbeat.core.designsystem.MoneyText
 import org.kealohalabs.receiptbeat.core.designsystem.look
+import org.kealohalabs.receiptbeat.core.model.Project
 import org.kealohalabs.receiptbeat.core.model.Receipt
 import org.kealohalabs.receiptbeat.core.model.Status
 import org.kealohalabs.receiptbeat.core.model.Track
@@ -105,7 +106,7 @@ fun ReceiptsScreen(open: (String) -> Unit, vm: ReceiptsViewModel = hiltViewModel
             }
         },
         bottomBar = {
-            AnimatedVisibility(s.selected.isNotEmpty()) { BulkBar(s.selected, run) }
+            AnimatedVisibility(s.selected.isNotEmpty()) { BulkBar(s.selected, s.projects.values.sortedBy { it.name }, run) }
         },
         snackbarHost = { SnackbarHost(snack) }
     ) { pad ->
@@ -273,7 +274,11 @@ private fun SwipeCard(
 }
 
 @Composable
-private fun BulkBar(ids: Set<String>, run: (Collection<String>, String, suspend (ReceiptRepository) -> Unit) -> Unit) {
+private fun BulkBar(
+    ids: Set<String>,
+    trips: List<Project>,
+    run: (Collection<String>, String, suspend (ReceiptRepository) -> Unit) -> Unit
+) {
     var menu by remember { mutableStateOf(false) }
     BottomAppBar {
         TextButton({ run(ids, "Moved forward") { it.advance(ids) } }) { Text("Move forward") }
@@ -287,6 +292,19 @@ private fun BulkBar(ids: Set<String>, run: (Collection<String>, String, suspend 
                     DropdownMenuItem({ Text("Mark ${st.label()}") }, {
                         menu = false
                         run(ids, "Marked ${st.label()}") { it.setStatus(ids, st) }
+                    })
+                }
+                if (trips.isNotEmpty()) {
+                    HorizontalDivider()
+                    trips.forEach { t ->
+                        DropdownMenuItem({ Text("Add to ${t.name}") }, {
+                            menu = false
+                            run(ids, "Added to ${t.name}") { it.setProject(ids, t.id, t.name) }
+                        })
+                    }
+                    DropdownMenuItem({ Text("Take off trip") }, {
+                        menu = false
+                        run(ids, "Taken off trip") { it.setProject(ids, null, null) }
                     })
                 }
                 HorizontalDivider()
@@ -327,6 +345,13 @@ private fun FilterRow(s: ReceiptsState, set: (ReceiptFilter) -> Unit) {
             ) {
                 set(f.copy(payerId = it))
             }
+        }
+        if (s.projects.isNotEmpty()) {
+            MenuChip(
+                s.projects[f.projectId]?.name ?: "Trip",
+                f.projectId != null,
+                listOf("Any trip" to null) + s.projects.values.sortedBy { it.name }.map { it.name to it.id }
+            ) { set(f.copy(projectId = it)) }
         }
         val today = LocalDate.now()
         val ranges = listOf(

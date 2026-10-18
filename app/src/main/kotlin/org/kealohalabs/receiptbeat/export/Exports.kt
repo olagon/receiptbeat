@@ -25,6 +25,7 @@ import org.kealohalabs.receiptbeat.core.designsystem.R
 import org.kealohalabs.receiptbeat.core.model.FileKind
 import org.kealohalabs.receiptbeat.core.model.Receipt
 import org.kealohalabs.receiptbeat.core.model.ReceiptFile
+import org.kealohalabs.receiptbeat.core.model.Report
 
 object Csv {
     val header = listOf("Date", "Merchant", "Category", "Amount", "Tax", "Currency", "Payer", "Project", "Notes", "File")
@@ -141,6 +142,31 @@ class Exporter @Inject constructor(
             ReportPdf.write(out, writer(), report, list, names, s.userName, s.homeCurrency) { r -> images(all[r.id].orEmpty()) }
         }
         val csv = File(dir(), "${report.number}.csv").apply { writeText(Csv.receipts(list, names, fileNames)) }
+        listOf(pdf, csv)
+    }
+
+    /** Trip report PDF and CSV. Nothing changes status, so you can share it as often as you like. */
+    suspend fun trip(projectId: String): List<File> = withContext(Dispatchers.IO) {
+        val trip = catalog.projects().firstOrNull { it.id == projectId } ?: return@withContext emptyList()
+        val list = receipts.all().filter { it.projectId == projectId && it.deletedAt == null }
+            .sortedWith(compareBy({ it.purchaseDate }, { it.createdAt }))
+        val names = lookup()
+        val s = settings.current()
+        val used = mutableSetOf<String>()
+        val all = list.associate { it.id to receipts.files(it.id) }
+        val fileNames = list.associate { r ->
+            r.id to ExportNames.names(r, ExportNames.bestFiles(all[r.id].orEmpty()), used).joinToString(" ") { it.second }
+        }
+        val report =
+            Report(number = "Trip", payerId = trip.payerId, title = trip.name, totalCents = list.sumOf { ReportRepository.homeCents(it) })
+        val base = "Trip-" + trip.name.replace(Regex("[^A-Za-z0-9]+"), "-").trim('-').ifBlank { "report" }
+        val pdf = File(dir(), "$base.pdf")
+        pdf.outputStream().use { out ->
+            ReportPdf.write(out, writer(), report, list, names, s.userName, s.homeCurrency, trip = true) { r ->
+                images(all[r.id].orEmpty())
+            }
+        }
+        val csv = File(dir(), "$base.csv").apply { writeText(Csv.receipts(list, names, fileNames)) }
         listOf(pdf, csv)
     }
 

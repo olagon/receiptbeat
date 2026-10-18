@@ -107,7 +107,10 @@ data class Lookup(val categories: Map<String, String>, val payers: Map<String, S
 
 private fun amount(cents: Long?, currency: String) = cents?.let { Money.format(it, currency) } ?: "No total"
 
-/** Reimbursement report: cover, summary table, then one page per receipt image. */
+/**
+ * Reimbursement report: cover, summary table, then one page per receipt image.
+ * A trip report is the same document for one trip, with a spend by category block and no signature.
+ */
 object ReportPdf {
     fun write(
         out: OutputStream,
@@ -117,6 +120,7 @@ object ReportPdf {
         names: Lookup,
         userName: String,
         homeCurrency: String,
+        trip: Boolean = false,
         images: (Receipt) -> List<Bitmap>
     ) {
         val payer = report.payerId?.let { names.payers[it] } ?: "No payer"
@@ -125,14 +129,15 @@ object ReportPdf {
         val submitted = (report.submittedAt ?: report.createdAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
 
         pdf.newPage()
-        pdf.band("Expense report", "${report.number}    ${report.title}")
+        val by = if (trip) "Prepared" else "Submitted"
+        pdf.band(if (trip) "Trip report" else "Expense report", if (trip) report.title else "${report.number}    ${report.title}")
         listOf(
+            (if (trip) "Trip" to report.title else "Report number" to report.number),
             "Payer" to payer,
-            "Report number" to report.number,
             "Dates" to range,
             "Receipts" to receipts.size.toString(),
-            "Submitted by" to userName.ifBlank { "Not set" },
-            "Submitted on" to submitted.format(PdfDate)
+            "$by by" to userName.ifBlank { "Not set" },
+            "$by on" to submitted.format(PdfDate)
         ).forEach { (k, v) ->
             pdf.text(k, M, pdf.y, 10f, color = GREY)
             pdf.text(v, M + 130, pdf.y, 12f, maxW = W - 2 * M - 130)
@@ -142,15 +147,33 @@ object ReportPdf {
         pdf.rect(M, pdf.y - 24, M + 4, pdf.y + 26, CORAL)
         pdf.text("Total", M + 12, pdf.y - 8, 10f, color = GREY)
         pdf.text(Money.format(report.totalCents, homeCurrency), M + 12, pdf.y + 18, 28f, true)
-        pdf.line(M, H - 120, M + 250, INK)
-        pdf.text("Signature", M, H - 104, 9f, color = GREY)
-        pdf.line(M + 300, H - 120, W - M, INK)
-        pdf.text("Date", M + 300, H - 104, 9f, color = GREY)
+        if (trip) {
+            pdf.y += 70
+            pdf.text("By category", M, pdf.y, 10f, true)
+            pdf.y += 20
+            val cats = receipts.groupBy { it.categoryId }
+                .map { (c, l) -> (c?.let { names.categories[it] } ?: "No category") to l.sumOf { ReportRepository.homeCents(it) } }
+                .sortedByDescending { it.second }
+            // ponytail: the cover fits about 12 lines, the rest fold into Other.
+            val shown = if (cats.size > 12) cats.take(11) + ("Other" to cats.drop(11).sumOf { it.second }) else cats
+            shown.forEach { (name, cents) ->
+                pdf.text(name, M, pdf.y, 11f, maxW = 300f)
+                pdf.text(Money.format(cents, homeCurrency), M + 400, pdf.y, 11f, right = true)
+                pdf.y += 18
+            }
+        } else {
+            pdf.line(M, H - 120, M + 250, INK)
+            pdf.text("Signature", M, H - 104, 9f, color = GREY)
+            pdf.line(M + 300, H - 120, W - M, INK)
+            pdf.text("Date", M + 300, H - 104, 9f, color = GREY)
+        }
 
-        summaryTable(pdf, report, receipts, names, homeCurrency)
+        summaryTable(pdf, receipts, names, homeCurrency, if (trip) report.title else report.number)
 
         receipts.forEach { r ->
-            images(r).forEach { bmp ->
+            val pages = images(r)
+            // A receipt typed in by hand still gets its own page, so the details are all there.
+            (pages.ifEmpty { listOf(null) }).forEach { bmp ->
                 pdf.newPage()
                 pdf.text(r.merchantName ?: "Receipt", M, pdf.y, 14f, true, maxW = W - 2 * M - 120)
                 pdf.text(amount(r.totalCents, r.currency), W - M, pdf.y, 14f, true, right = true)
@@ -167,14 +190,19 @@ object ReportPdf {
                     pdf.text(it.replace('\n', ' '), M, pdf.y, 10f, color = GREY, maxW = W - 2 * M)
                 }
                 pdf.y += 14
-                pdf.image(bmp)
-                bmp.recycle()
+                if (bmp == null) {
+                    pdf.y += 20
+                    pdf.text("No image saved for this receipt.", M, pdf.y, 10f, color = GREY)
+                } else {
+                    pdf.image(bmp)
+                    bmp.recycle()
+                }
             }
         }
         pdf.finish(out)
     }
 
-    private fun summaryTable(pdf: PdfWriter, report: Report, receipts: List<Receipt>, names: Lookup, home: String) {
+    private fun summaryTable(pdf: PdfWriter, receipts: List<Receipt>, names: Lookup, home: String, label: String) {
         val amountX = W - M - 50
         fun header() {
             pdf.text("Date", M, pdf.y, 9f, true)
@@ -186,7 +214,7 @@ object ReportPdf {
             pdf.y += 22
         }
         pdf.newPage()
-        pdf.band("Summary", "${report.number}    ${receipts.size} receipts")
+        pdf.band("Summary", "$label    ${receipts.size} receipts")
         header()
         receipts.forEach { r ->
             val foreign = r.currency != home && r.homeCurrencyTotalCents != null

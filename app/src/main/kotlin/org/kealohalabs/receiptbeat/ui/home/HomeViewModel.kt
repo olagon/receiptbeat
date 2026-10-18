@@ -15,10 +15,14 @@ import org.kealohalabs.receiptbeat.core.data.DashboardView
 import org.kealohalabs.receiptbeat.core.data.Period
 import org.kealohalabs.receiptbeat.core.data.ReceiptRepository
 import org.kealohalabs.receiptbeat.core.data.SettingsRepository
+import org.kealohalabs.receiptbeat.core.data.TripMath
+import org.kealohalabs.receiptbeat.core.data.TripSummary
 import org.kealohalabs.receiptbeat.core.model.Category
 import org.kealohalabs.receiptbeat.core.model.Payer
+import org.kealohalabs.receiptbeat.core.model.Project
 import org.kealohalabs.receiptbeat.core.model.Receipt
 import org.kealohalabs.receiptbeat.core.model.Status
+import org.kealohalabs.receiptbeat.core.model.TaxLine
 
 data class HomeState(
     val view: DashboardView? = null,
@@ -34,7 +38,11 @@ data class HomeState(
     val reviewCount: Int = 0,
     val overdueReports: Int = 0,
     val scanning: Boolean = false,
+    val trips: List<TripSummary> = emptyList(),
+    val tripCount: Int = 0,
 )
+
+private data class Catalog(val c: List<Category>, val tl: List<TaxLine>, val p: List<Payer>, val pr: List<Project>)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -45,10 +53,10 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
     val state: StateFlow<HomeState> = combine(
         combine(repo.receipts, repo.thumbs, repo.lowConfidence) { r, t, l -> Triple(r, t, l) },
-        combine(catalog.categories, catalog.taxLines, catalog.payers) { c, tl, p -> Triple(c, tl, p) },
+        combine(catalog.categories, catalog.taxLines, catalog.payers, catalog.projects) { c, tl, p, pr -> Catalog(c, tl, p, pr) },
         settings.settings,
         extras.counts,
-    ) { (all, thumbs, low), (cats, lines, payers), s, x ->
+    ) { (all, thumbs, low), (cats, lines, payers, projects), s, x ->
         val period = runCatching { Period.valueOf(s.dashPeriod) }.getOrDefault(Period.MONTH)
         HomeState(
             view = DashboardMath.build(all, cats, lines, period),
@@ -64,6 +72,8 @@ class HomeViewModel @Inject constructor(
             reviewCount = x.reviewCount,
             overdueReports = x.overdue,
             scanning = x.scanning,
+            trips = TripMath.summarize(projects, all).take(2),
+            tripCount = projects.size,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeState())
 

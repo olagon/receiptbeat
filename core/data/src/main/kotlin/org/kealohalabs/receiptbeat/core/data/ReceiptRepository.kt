@@ -342,6 +342,14 @@ class ReceiptRepository @Inject constructor(
         }
     }
 
+    /** Puts receipts on a trip, or takes them off when [projectId] is null. */
+    suspend fun setProject(ids: Collection<String>, projectId: String?, name: String?) {
+        dao.getMany(ids.toList()).filter { !it.locked && it.projectId != projectId }.forEach { r ->
+            dao.upsert(r.copy(projectId = projectId, updatedAt = Instant.now()))
+            event(r.id, if (name != null) "Added to $name" else "Taken off trip")
+        }
+    }
+
     suspend fun setLocked(ids: Collection<String>, locked: Boolean) {
         dao.getMany(ids.toList()).forEach { dao.upsert(it.copy(locked = locked, updatedAt = Instant.now())) }
     }

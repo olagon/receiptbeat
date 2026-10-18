@@ -27,6 +27,7 @@ import org.kealohalabs.receiptbeat.core.data.SettingsRepository
 import org.kealohalabs.receiptbeat.core.model.Category
 import org.kealohalabs.receiptbeat.core.model.Money
 import org.kealohalabs.receiptbeat.core.model.Payer
+import org.kealohalabs.receiptbeat.core.model.Project
 import org.kealohalabs.receiptbeat.core.model.Receipt
 import org.kealohalabs.receiptbeat.core.model.Source
 import org.kealohalabs.receiptbeat.core.model.Status
@@ -43,6 +44,7 @@ data class ReceiptFilter(
     val track: Track? = null,
     val categoryId: String? = null,
     val payerId: String? = null,
+    val projectId: String? = null,
     val from: LocalDate? = null,
     val to: LocalDate? = null,
     val source: SourceFilter? = null,
@@ -53,6 +55,7 @@ data class ReceiptFilter(
         track != null ||
         categoryId != null ||
         payerId != null ||
+        projectId != null ||
         from != null ||
         source != null ||
         needsLook
@@ -68,6 +71,7 @@ data class ReceiptFilter(
             "paid" -> ReceiptFilter(statuses = setOf(Status.REIMBURSED, Status.PARTLY_REIMBURSED), track = Track.REIMBURSABLE)
             else -> when {
                 // "category:meals" or "from:2026-10-01" from the dashboard charts
+                name?.startsWith("project:") == true -> ReceiptFilter(projectId = name.substringAfter(':').ifBlank { null })
                 name?.startsWith("category:") == true -> ReceiptFilter(categoryId = name.substringAfter(':').ifBlank { null })
                 name?.startsWith("from:") == true -> ReceiptFilter(
                     from = runCatching {
@@ -91,6 +95,7 @@ data class ReceiptsState(
     val low: Set<String> = emptySet(),
     val categories: Map<String, Category> = emptyMap(),
     val payers: Map<String, Payer> = emptyMap(),
+    val projects: Map<String, Project> = emptyMap(),
     val filter: ReceiptFilter = ReceiptFilter(),
     val selected: Set<String> = emptySet(),
     val hideAmounts: Boolean = false,
@@ -121,8 +126,13 @@ class ReceiptsViewModel @Inject constructor(
         }
     }
 
-    private val base = combine(repo.receipts, repo.thumbs, repo.lowConfidence, catalog.categories, catalog.payers) { r, t, l, c, p ->
-        Base(r, t, l, c.associateBy { it.id }, p.associateBy { it.id })
+    private val base = combine(
+        combine(repo.receipts, repo.thumbs, repo.lowConfidence) { r, t, l -> Triple(r, t, l) },
+        catalog.categories,
+        catalog.payers,
+        catalog.projects,
+    ) { (r, t, l), c, p, pr ->
+        Base(r, t, l, c.associateBy { it.id }, p.associateBy { it.id }, pr.associateBy { it.id })
     }
 
     val state: StateFlow<ReceiptsState> = combine(base, filter, hits, selected, settings.settings) { b, f, h, sel, s ->
@@ -134,7 +144,7 @@ class ReceiptsViewModel @Inject constructor(
         } else {
             listOf(MonthGroup(null, list.sumOf { it.totalCents ?: 0 }, list))
         }
-        ReceiptsState(groups, list.size, b.thumbs, b.low, b.categories, b.payers, f, sel, s.hideAmounts, loaded = true)
+        ReceiptsState(groups, list.size, b.thumbs, b.low, b.categories, b.payers, b.projects, f, sel, s.hideAmounts, loaded = true)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReceiptsState())
 
     private data class Base(
@@ -142,7 +152,8 @@ class ReceiptsViewModel @Inject constructor(
         val thumbs: Map<String, String>,
         val low: Set<String>,
         val categories: Map<String, Category>,
-        val payers: Map<String, Payer>
+        val payers: Map<String, Payer>,
+        val projects: Map<String, Project>
     )
 
     private fun matches(r: Receipt, f: ReceiptFilter, hits: Set<String>?, low: Set<String>): Boolean {
@@ -151,6 +162,7 @@ class ReceiptsViewModel @Inject constructor(
         if (f.track != null && r.track != f.track) return false
         if (f.categoryId != null && r.categoryId != f.categoryId) return false
         if (f.payerId != null && r.payerId != f.payerId) return false
+        if (f.projectId != null && r.projectId != f.projectId) return false
         val d = r.purchaseDate
         if (f.from != null && (d == null || d < f.from)) return false
         if (f.to != null && (d == null || d > f.to)) return false

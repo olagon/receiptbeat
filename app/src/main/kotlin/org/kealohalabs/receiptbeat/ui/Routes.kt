@@ -24,6 +24,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable object BackupRoute
 
+@Serializable object TripsRoute
+
 /**
  * The one way to move around the app. Home is the root. Going to a tab (Receipts, Review, Money)
  * always starts again from Home, so a tab never comes back showing some other screen.

@@ -393,7 +393,7 @@ private fun Payers(s: SettingsState, vm: SettingsViewModel) {
         }
     }
     payer?.let { p -> PayerDialog(p, vm) { payer = null } }
-    project?.let { p -> ProjectDialog(p, s, vm) { project = null } }
+    project?.let { p -> ProjectDialog(p, s.payers, vm::saveProject, vm::deleteProject) { project = null } }
 }
 
 @Composable
@@ -475,7 +475,7 @@ private fun PayerDialog(p: Payer, vm: SettingsViewModel, close: () -> Unit) {
 }
 
 @Composable
-private fun ProjectDialog(p: Project, s: SettingsState, vm: SettingsViewModel, close: () -> Unit) {
+internal fun ProjectDialog(p: Project, payers: List<Payer>, save: (Project) -> Unit, delete: (Project) -> Unit, close: () -> Unit) {
     var name by remember { mutableStateOf(p.name) }
     var payerId by remember { mutableStateOf(p.payerId) }
     var start by remember { mutableStateOf(p.startDate) }
@@ -483,13 +483,13 @@ private fun ProjectDialog(p: Project, s: SettingsState, vm: SettingsViewModel, c
     var pick by remember { mutableStateOf<String?>(null) }
     AlertDialog(
         onDismissRequest = close,
-        title = { Text(if (p.name.isEmpty()) "New project or trip" else "Edit project") },
+        title = { Text(if (p.name.isEmpty()) "New trip or project" else "Edit trip or project") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true)
                 ListItem(
                     headlineContent = { Text("Payer") },
-                    supportingContent = { Text(s.payers.firstOrNull { it.id == payerId }?.name ?: "None") },
+                    supportingContent = { Text(payers.firstOrNull { it.id == payerId }?.name ?: "None") },
                     modifier = Modifier.clickable { pick = "payer" },
                 )
                 ListItem(
@@ -514,22 +514,22 @@ private fun ProjectDialog(p: Project, s: SettingsState, vm: SettingsViewModel, c
                 )
                 if (p.name.isNotEmpty()) {
                     TextButton({
-                        vm.deleteProject(p)
+                        delete(p)
                         close()
-                    }) { Text("Delete project") }
+                    }) { Text("Delete") }
                 }
             }
         },
         confirmButton = {
             TextButton({
-                if (name.isNotBlank()) vm.saveProject(p.copy(name = name.trim(), payerId = payerId, startDate = start, endDate = end))
+                if (name.isNotBlank()) save(p.copy(name = name.trim(), payerId = payerId, startDate = start, endDate = end))
                 close()
             }) { Text("Save") }
         },
         dismissButton = { TextButton(close) { Text("Cancel") } },
     )
     when (pick) {
-        "payer" -> PickSheet("Payer", listOf<Pair<String?, String>>(null to "None") + s.payers.map { it.id to it.name }, payerId, {
+        "payer" -> PickSheet("Payer", listOf<Pair<String?, String>>(null to "None") + payers.map { it.id to it.name }, payerId, {
             pick =
                 null
         }) {

@@ -100,6 +100,7 @@ fun HomeScreen(
     openSettings: () -> Unit,
     openReview: () -> Unit,
     openMoney: () -> Unit,
+    openTrips: () -> Unit = {},
     vm: HomeViewModel = hiltViewModel(),
 ) {
     val s by vm.state.collectAsStateWithLifecycle()
@@ -132,6 +133,7 @@ fun HomeScreen(
         attention(s, openList, openReview, openMoney)?.let { rows -> item { Attention(rows) } }
         if (v.byMonth.any { it.cents > 0 }) item { MonthChart(v, s, openList) }
         if (v.byCategory.isNotEmpty()) item { CategoryChart(v, s, openList) }
+        item { Trips(s, openTrips, openList) }
         item { SectionHeader("Recent") { if (s.recent.isNotEmpty()) TextButton({ openList(null) }) { Text("See all") } } }
         if (s.recent.isEmpty()) {
             item { EmptyState("No receipts yet", "Tap the coral button to scan your first receipt. It takes about 3 seconds.") }
@@ -491,4 +493,37 @@ private fun greeting(): String = when (LocalTime.now().hour) {
     in 4..11 -> "Good morning"
     in 12..16 -> "Good afternoon"
     else -> "Good evening"
+}
+
+/** The latest trips, or a nudge to make one. */
+@Composable
+private fun Trips(s: HomeState, openTrips: () -> Unit, openList: (String?) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SectionHeader("Trips") { TextButton(openTrips) { Text(if (s.tripCount == 0) "Add a trip" else "See all") } }
+        if (s.trips.isEmpty()) {
+            AppCard(Modifier.fillMaxWidth(), onClick = openTrips) {
+                Text(
+                    "Group receipts by trip or project, then share one PDF with all of them.",
+                    Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        s.trips.forEach { t ->
+            AppCard(Modifier.fillMaxWidth(), onClick = { openList("project:${t.project.id}") }) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(t.project.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            if (t.count == 1) "1 receipt" else "${t.count} receipts",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    MoneyText(t.totalCents, currency = s.currency, style = MoneyStyle.Small, hidden = s.hideAmounts)
+                }
+            }
+        }
+    }
 }
