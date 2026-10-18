@@ -36,6 +36,7 @@ import org.kealohalabs.receiptbeat.ui.ReceiptsRoute
 import org.kealohalabs.receiptbeat.ui.ReviewRoute
 import org.kealohalabs.receiptbeat.ui.common.ImageLoader
 import org.kealohalabs.receiptbeat.ui.common.LocalImageLoader
+import org.kealohalabs.receiptbeat.ui.go
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -74,7 +75,7 @@ class MainActivity : FragmentActivity() {
             val reviewCount by mail.reviewCount.collectAsStateWithLifecycle(0)
             val locked by lockState.collectAsStateWithLifecycle()
             val nav = rememberNavController()
-            LaunchedEffect(Unit) { routes.receiveAsFlow().collect { nav.navigate(it) } }
+            LaunchedEffect(Unit) { routes.receiveAsFlow().collect { nav.go(it) } }
             ReceiptBeatTheme(
                 mode = runCatching { ThemeMode.valueOf(s.theme) }.getOrDefault(ThemeMode.SYSTEM),
                 dynamicColor = s.dynamicColor

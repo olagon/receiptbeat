@@ -63,19 +63,7 @@ fun AppShell(actions: AppActions, nav: NavHostController = rememberNavController
     val entry by nav.currentBackStackEntryAsState()
     val dest = entry?.destination
     val showBars = Tabs.any { t -> dest?.hasRoute(t.route::class) == true }
-    val select: (Tab) -> Unit = { t ->
-        if (t.route == HomeRoute) {
-            // Home is the root. Going home always clears whatever was opened on top, like a list from a dashboard chart.
-            nav.popBackStack(HomeRoute, inclusive = false)
-        } else {
-            nav.navigate(t.route) {
-                // Every other tab pops back to Home and keeps its own place.
-                popUpTo<HomeRoute> { saveState = true }
-                launchSingleTop = true
-                restoreState = true
-            }
-        }
-    }
+    val select: (Tab) -> Unit = { t -> nav.go(t.route) }
     val capture = { nav.navigate(CaptureRoute()) }
     // First launch: onboarding sits on top of Home, so Home stays the root of the app.
     androidx.compose.runtime.LaunchedEffect(showOnboarding) { if (showOnboarding) nav.navigate(OnboardingRoute) }

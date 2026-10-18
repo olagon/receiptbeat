@@ -37,11 +37,11 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions) 
     NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
         composable<HomeRoute> {
             HomeScreen(
-                openList = { nav.navigate(ReceiptsRoute(it)) },
+                openList = { nav.go(ReceiptsRoute(it)) },
                 openReceipt = openReceipt,
                 openSettings = { nav.navigate(SettingsRoute) },
-                openReview = { nav.navigate(ReviewRoute) },
-                openMoney = { nav.navigate(MoneyRoute()) }
+                openReview = { nav.go(ReviewRoute) },
+                openMoney = { nav.go(MoneyRoute()) }
             )
         }
         composable<ReceiptsRoute> {
@@ -77,8 +77,7 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions) 
                 startImport = r.mode == "import",
                 back = { nav.popBackStack() },
                 done = {
-                    nav.popBackStack()
-                    nav.navigate(ReceiptsRoute("inbox"))
+                    nav.go(ReceiptsRoute("inbox"))
                 }
             )
         }
@@ -102,7 +101,7 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions) 
         composable<OnboardingRoute> {
             val finish: (Any?) -> Unit = { next ->
                 nav.popBackStack(OnboardingRoute, inclusive = true)
-                if (next != null) nav.navigate(next)
+                if (next != null) nav.go(next)
             }
             OnboardingScreen(addEmail = { finish(EmailWizardRoute()) }, done = { finish(null) })
         }
@@ -112,8 +111,7 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions) 
                 start = it.toRoute<EmailWizardRoute>().provider,
                 back = { nav.popBackStack() },
                 done = {
-                    nav.popBackStack()
-                    nav.navigate(ReviewRoute) { launchSingleTop = true }
+                    nav.go(ReviewRoute)
                 },
             )
         }
