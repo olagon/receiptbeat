@@ -1,0 +1,20 @@
+Blue Plate Diner
+3015 Lyndale Ave S
+Minneapolis, MN 55408
+Check #88
+Table 14
+Server: Erin
+Jul 4, 2026 12:31 PM
+1 Two Egg Breakfast $12.95
+1 Blueberry Pancakes $11.50
+1 Side Bacon $4.95
+1 Coffee $3.50
+1 Fresh OJ $5.50
+Subtotal $38.40
+Tax $3.37
+Tip $7.00
+Total $48.77
+Discover XXXX6031 $48.77
+Approved Auth: 004718
+Thanks for dining with us!
+TST* online ordering at blueplatediner.com

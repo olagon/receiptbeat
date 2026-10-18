@@ -1,0 +1,25 @@
+COURTYARD
+BY MARRIOTT
+Nashville Downtown
+170 4th Avenue North
+Nashville TN 37219
+Phone (615) 555-0123
+Name: Lagon, Olin  Room: 0915
+Arrival 14-DEC-25  Departure 16-DEC-25
+Rate 229.00  Guests 1
+Folio Window 1   Page 1 of 1
+Date        Description              Amount
+14-DEC-25 Room Charge 229.00
+14-DEC-25 State Sales Tax 21.18
+14-DEC-25 City Occupancy Tax 13.74
+14-DEC-25 Davidson Co Occ Tax 2.50
+15-DEC-25 The Bistro 18.40
+15-DEC-25 Room Charge 229.00
+15-DEC-25 State Sales Tax 21.18
+15-DEC-25 City Occupancy Tax 13.74
+15-DEC-25 Davidson Co Occ Tax 2.50
+16-DEC-25 MasterCard XXXX5678 (551.24)
+Total 551.24 (551.24)
+Balance 0.00 USD
+Marriott Bonvoy Member 33*****18
+Thank you for choosing Courtyard

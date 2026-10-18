@@ -1,0 +1,23 @@
+LUCIA'S TRATTORIA
+1440 W Taylor St
+Chicago, IL 60607
+312.555.0102
+Server: Marco Table: 12
+Guests: 2 Check: 20931
+Mar 8 2025 08:41PM
+Burrata 16.00
+Rigatoni Bolognese 24.00
+Branzino 32.00
+2 Chianti Classico 26.00
+Tiramisu 11.00
+Subtotal 109.00
+Tax 12.81
+Amount 121.81
+VISA ************3382
+Auth 51920B
+Tip: 22.00
+Total: 143.81
+x_________________
+I agree to pay the above total amount
+according to card issuer agreement
+MERCHANT COPY

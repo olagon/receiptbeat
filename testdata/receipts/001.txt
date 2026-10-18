@@ -1,0 +1,17 @@
+SQ *BLUE HERON COFFEE
+2214 SE Division St
+Portland, OR 97202
+(503) 555-0148
+
+Nov 3, 2025 7:42 AM
+Ticket: 41 Receipt: 7Hq2
+Device: Front Counter
+Oat Latte 16oz $5.75
++ Extra Shot $1.00
+Morning Bun $4.25
+Subtotal $11.00
+Tip $2.00
+Total $13.00
+VISA ************4417
+Auth: 083551
+Thank you!
