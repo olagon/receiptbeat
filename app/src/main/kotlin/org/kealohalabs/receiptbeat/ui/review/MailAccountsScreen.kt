@@ -18,23 +18,33 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +64,7 @@ import org.kealohalabs.receiptbeat.core.model.ScanFrequency
 import org.kealohalabs.receiptbeat.core.model.ScanMode
 import org.kealohalabs.receiptbeat.core.model.ScanRange
 import org.kealohalabs.receiptbeat.core.model.SenderRuleKind
+import org.kealohalabs.receiptbeat.ui.detail.DateDialog
 
 private val RunFmt = DateTimeFormatter.ofPattern("MMM d, h:mm a")
 private val MonthFmt = DateTimeFormatter.ofPattern("MMM")
@@ -131,6 +142,7 @@ private fun Account(a: MailAccount, auto: AutoScanSettings, ranges: List<ScanRan
                 style = MaterialTheme.typography.bodySmall,
             )
             Months(ranges)
+            SearchSettings(a, vm)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton({ vm.scanNow(a) }) { Text("Scan now") }
                 OutlinedButton({ vm.extendBack(a, 12) }) { Text("Extend back a year") }
@@ -203,4 +215,101 @@ private fun hour(h: Int) = when {
     h < 12 -> "$h AM"
     h == 12 -> "12 PM"
     else -> "${h - 12} PM"
+}
+
+/** What to search: folders, search words and how far back. Saving starts a scan with the new settings. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun SearchSettings(a: MailAccount, vm: ReviewViewModel) {
+    val gmail = a.imapHost.equals("imap.gmail.com", true)
+    var editing by rememberSaveable { mutableStateOf(false) }
+    Text("What to search", style = MaterialTheme.typography.titleSmall)
+    Text(
+        "Folders: " + (a.folders?.lines()?.joinToString(", ") ?: if (gmail) "All Mail (includes archived mail)" else "Inbox and Archive") +
+            "\nWords: " + (a.searchWords ?: "receipt, invoice, order, payment and similar") +
+            "\nFrom: " + a.scanFrom.format(DateTimeFormatter.ofPattern("MMM d, yyyy")),
+        style = MaterialTheme.typography.bodySmall,
+    )
+    TextButton({ editing = true }) { Text("Change what to search") }
+    if (editing) SearchDialog(a, gmail, vm) { editing = false }
+}
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun SearchDialog(a: MailAccount, gmail: Boolean, vm: ReviewViewModel, close: () -> Unit) {
+    var all by remember { mutableStateOf<List<String>?>(null) }
+    var defaults by remember { mutableStateOf(emptyList<String>()) }
+    var picked by remember { mutableStateOf(a.folders?.lines()?.toSet()) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var words by remember { mutableStateOf(a.searchWords.orEmpty()) }
+    var from by remember { mutableStateOf(a.scanFrom) }
+    var pickDate by remember { mutableStateOf(false) }
+    LaunchedEffect(a.id) {
+        vm.loadFolders(a) { list, def, e ->
+            all = list
+            defaults = def
+            error = e
+        }
+    }
+    val chosen = picked ?: defaults.toSet()
+    AlertDialog(
+        onDismissRequest = close,
+        title = { Text("What to search") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Folders", style = MaterialTheme.typography.titleSmall)
+                when {
+                    error != null -> Text(error!!, color = MaterialTheme.colorScheme.error)
+                    all == null -> LinearProgressIndicator(Modifier.fillMaxWidth())
+                    else -> {
+                        if (gmail) {
+                            Text(
+                                "All Mail holds everything, including archived mail. Spam and Trash are always left out.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                        all!!.forEach { f ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(f in chosen, { on -> picked = if (on) chosen + f else chosen - f })
+                                Text(f, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                }
+                Text("Search words", style = MaterialTheme.typography.titleSmall)
+                OutlinedTextField(
+                    words,
+                    { words = it },
+                    placeholder = { Text(if (gmail) "from:amazon.com OR label:receipts" else "receipt invoice order") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    if (gmail) {
+                        "Leave empty to use the built in receipt words. You can use Gmail search, like from:uber.com, " +
+                            "label:receipts or subject:invoice. Join with OR."
+                    } else {
+                        "Leave empty to use the built in receipt words. Separate words with spaces. " +
+                            "Any email with one of them in the subject or body is checked."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text("Search from", style = MaterialTheme.typography.titleSmall)
+                TextButton({ pickDate = true }) { Text(from.format(DateTimeFormatter.ofPattern("MMM d, yyyy"))) }
+            }
+        },
+        confirmButton = {
+            TextButton({
+                vm.saveSearch(a, picked?.toList()?.takeIf { it.toSet() != defaults.toSet() }, words, from)
+                close()
+            }, enabled = chosen.isNotEmpty() || all == null) { Text("Save and scan") }
+        },
+        dismissButton = { TextButton(close) { Text("Cancel") } },
+    )
+    if (pickDate) {
+        DateDialog(from, { pickDate = false }) {
+            if (it != null) from = it
+            pickDate = false
+        }
+    }
 }

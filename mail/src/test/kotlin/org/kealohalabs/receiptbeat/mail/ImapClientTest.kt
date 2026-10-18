@@ -90,8 +90,12 @@ class ImapClientTest {
         assertEquals("imap.example.org", ImapClient.hostFor("a@example.org"))
         assertEquals(
             "after:2026/01/01 before:2026/07/01 " +
-                "(receipt OR invoice OR order OR \"your trip\" OR payment OR total OR paid OR category:purchases)",
+                "(receipt OR invoice OR order OR \"your trip\" OR payment OR total OR paid OR category:purchases) -in:spam -in:trash",
             ImapClient.gmailQuery(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30))
+        )
+        assertEquals(
+            "after:2026/01/01 before:2026/07/01 (from:amazon.com OR label:receipts) -in:spam -in:trash",
+            ImapClient.gmailQuery(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30), "from:amazon.com OR label:receipts")
         )
     }
 }

@@ -181,7 +181,11 @@ data class MailAccount(
     /** Highest UID seen per folder, stored as "folder=uid;folder=uid". */
     val lastUidByFolder: String? = null,
     val lastScanAt: Instant? = null,
-    val scanFrom: LocalDate
+    val scanFrom: LocalDate,
+    /** Folders to search, one per line. Null means the default (Gmail All Mail, or Inbox plus Archive). */
+    val folders: String? = null,
+    /** The user's own search words. Null means the built in receipt words. For Gmail, Gmail search syntax. */
+    val searchWords: String? = null
 )
 
 @Entity

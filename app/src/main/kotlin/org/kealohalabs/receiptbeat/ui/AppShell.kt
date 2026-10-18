@@ -43,7 +43,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -59,19 +58,22 @@ val Tabs = listOf(
 )
 
 @Composable
-fun AppShell(actions: AppActions, nav: NavHostController = rememberNavController(), reviewBadge: Int = 0, start: Any = HomeRoute) {
+fun AppShell(actions: AppActions, nav: NavHostController = rememberNavController(), reviewBadge: Int = 0, showOnboarding: Boolean = false) {
     val wide = LocalConfiguration.current.screenWidthDp >= 600
     val entry by nav.currentBackStackEntryAsState()
     val dest = entry?.destination
     val showBars = Tabs.any { t -> dest?.hasRoute(t.route::class) == true }
     val select: (Tab) -> Unit = { t ->
         nav.navigate(t.route) {
-            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+            // Home is always the root, so every tab pops back to it and keeps its own place.
+            popUpTo<HomeRoute> { saveState = true }
             launchSingleTop = true
             restoreState = true
         }
     }
     val capture = { nav.navigate(CaptureRoute()) }
+    // First launch: onboarding sits on top of Home, so Home stays the root of the app.
+    androidx.compose.runtime.LaunchedEffect(showOnboarding) { if (showOnboarding) nav.navigate(OnboardingRoute) }
 
     if (wide) {
         Row(Modifier.fillMaxSize()) {
@@ -89,7 +91,7 @@ fun AppShell(actions: AppActions, nav: NavHostController = rememberNavController
                     }
                 }
             }
-            Surface(Modifier.weight(1f), color = MaterialTheme.colorScheme.background) { AppNavHost(nav, Modifier, actions, start) }
+            Surface(Modifier.weight(1f), color = MaterialTheme.colorScheme.background) { AppNavHost(nav, Modifier, actions) }
         }
     } else {
         Scaffold(
@@ -98,7 +100,7 @@ fun AppShell(actions: AppActions, nav: NavHostController = rememberNavController
             },
             contentWindowInsets = WindowInsets(0)
         ) { pad ->
-            AppNavHost(nav, Modifier.padding(pad), actions, start)
+            AppNavHost(nav, Modifier.padding(pad), actions)
         }
     }
 }

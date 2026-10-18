@@ -32,9 +32,9 @@ import org.kealohalabs.receiptbeat.ui.settings.SettingsScreen
 data class AppActions(val shareReceipt: (String) -> Unit, val shareFiles: (List<java.io.File>, String) -> Unit)
 
 @Composable
-fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, start: Any = HomeRoute) {
+fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions) {
     val openReceipt: (String) -> Unit = { nav.navigate(ReceiptRoute(it)) }
-    NavHost(nav, startDestination = start, modifier = modifier) {
+    NavHost(nav, startDestination = HomeRoute, modifier = modifier) {
         composable<HomeRoute> {
             HomeScreen(
                 openList = { nav.navigate(ReceiptsRoute(it)) },
@@ -101,7 +101,7 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, 
         }
         composable<OnboardingRoute> {
             val finish: (Any?) -> Unit = { next ->
-                nav.navigate(HomeRoute) { popUpTo(OnboardingRoute) { inclusive = true } }
+                nav.popBackStack(OnboardingRoute, inclusive = true)
                 if (next != null) nav.navigate(next)
             }
             OnboardingScreen(addEmail = { finish(EmailWizardRoute()) }, done = { finish(null) })

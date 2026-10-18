@@ -31,9 +31,7 @@ import org.kealohalabs.receiptbeat.email.EmailImportWorker
 import org.kealohalabs.receiptbeat.ui.AppActions
 import org.kealohalabs.receiptbeat.ui.AppShell
 import org.kealohalabs.receiptbeat.ui.CaptureRoute
-import org.kealohalabs.receiptbeat.ui.HomeRoute
 import org.kealohalabs.receiptbeat.ui.MoneyRoute
-import org.kealohalabs.receiptbeat.ui.OnboardingRoute
 import org.kealohalabs.receiptbeat.ui.ReceiptsRoute
 import org.kealohalabs.receiptbeat.ui.ReviewRoute
 import org.kealohalabs.receiptbeat.ui.common.ImageLoader
@@ -93,7 +91,7 @@ class MainActivity : FragmentActivity() {
                         ),
                         nav = nav,
                         reviewBadge = reviewCount,
-                        start = if (first.onboarded) HomeRoute else OnboardingRoute
+                        showOnboarding = !first.onboarded
                     )
                 }
             }

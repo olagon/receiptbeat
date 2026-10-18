@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "org.kealohalabs.receiptbeat.core.database"
     sourceSets["androidTest"].assets.srcDir("$projectDir/schemas")
+    sourceSets["test"].assets.srcDir("$projectDir/schemas")
 }
 
 room { schemaDirectory("$projectDir/schemas") }

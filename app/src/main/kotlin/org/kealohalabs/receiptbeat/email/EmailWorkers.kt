@@ -196,12 +196,13 @@ class MailScanWorker @AssistedInject constructor(
                 report(run, "", 0, "Connecting to ${account.email}")
                 imap.connect()
                 val lastUids = parseUids(account.lastUidByFolder).toMutableMap()
-                for (folder in folders(imap)) {
+                val words = account.searchWords?.takeIf { it.isNotBlank() }
+                for (folder in account.folders?.lines()?.filter { it.isNotBlank() }?.takeIf { it.isNotEmpty() } ?: imap.defaultFolders()) {
                     report(run, folder, 0, "Searching $folder")
                     // First fill any date gaps not searched before, then ask only for mail newer than the last seen.
                     val uids = linkedSetOf<Long>()
-                    val gaps = mail.gaps(accountId, folder, from, LocalDate.now())
-                    gaps.forEach { (a, b) -> uids += imap.search(folder, a, b) }
+                    val gaps = mail.gaps(accountId, folder, from, LocalDate.now(), words)
+                    gaps.forEach { (a, b) -> uids += imap.search(folder, a, b, words) }
                     lastUids[folder]?.let { uids += imap.uidsAfter(folder, it) }
                     if (resume?.first == folder) uids.removeAll { it <= resume.second }
                     val toCheck = uids.size
@@ -214,7 +215,7 @@ class MailScanWorker @AssistedInject constructor(
                         lastUids[folder] = maxOf(lastUids[folder] ?: 0, batch.max())
                         mail.saveRun(run)
                     }
-                    if (!isStopped) gaps.forEach { (a, b) -> mail.rangeDone(accountId, folder, a, b) }
+                    if (!isStopped) gaps.forEach { (a, b) -> mail.rangeDone(accountId, folder, a, b, words) }
                 }
                 mail.saveAccount(
                     account.copy(
@@ -272,15 +273,6 @@ class MailScanWorker @AssistedInject constructor(
         return Result.success() // Logged in the scan log. Retrying a wrong password would only lock the account.
     }
 
-    /** Inbox plus any folder that looks like it holds purchases. */
-    private fun folders(imap: ImapClient): List<String> {
-        val all = imap.folders()
-        return (listOf("INBOX") + all.filter { f -> FolderWords.any { f.contains(it, ignoreCase = true) } }).distinct().filter {
-            it in all ||
-                it == "INBOX"
-        }
-    }
-
     /** At most one quiet summary a week. New finds also show as a badge on the Review tab. */
     private suspend fun weeklySummary(found: Int) {
         if (found == 0) return
@@ -300,7 +292,6 @@ class MailScanWorker @AssistedInject constructor(
         private const val BATCH = 50
         private const val WEEK = 7
         private const val SUMMARY_ID = 3001
-        private val FolderWords = listOf("receipt", "purchase", "order", "invoice")
 
         fun parseUids(s: String?): Map<String, Long> = s?.split(";")?.mapNotNull { e ->
             e.split("=").takeIf { it.size == 2 }?.let { it[0] to (it[1].toLongOrNull() ?: 0) }

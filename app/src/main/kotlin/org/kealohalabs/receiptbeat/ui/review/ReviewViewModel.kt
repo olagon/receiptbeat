@@ -193,6 +193,43 @@ class ReviewViewModel @Inject constructor(
         }
     }
 
+    /** Lists the account's folders from the server, plus the ones searched by default. */
+    fun loadFolders(account: MailAccount, done: (all: List<String>, defaults: List<String>, error: String?) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val secret = mail.secret(account.id) ?: error("Password missing")
+                    ImapClient(ImapConfig(account.imapHost, account.imapPort, account.email, secret)).use {
+                        it.connect()
+                        it.folders().sorted() to it.defaultFolders()
+                    }
+                }
+            }
+            result.fold({ done(it.first, it.second, null) }, {
+                done(
+                    emptyList(),
+                    emptyList(),
+                    MailScanWorker.friendly(
+                        it as? Exception ?: Exception(it)
+                    )
+                )
+            })
+        }
+    }
+
+    /** Save what to search, then scan with the new settings. Null folders or words mean the defaults. */
+    fun saveSearch(account: MailAccount, folders: List<String>?, words: String?, from: LocalDate) {
+        viewModelScope.launch {
+            val updated = account.copy(
+                folders = folders?.takeIf { it.isNotEmpty() }?.joinToString("\n"),
+                searchWords = words?.trim()?.takeIf { it.isNotEmpty() },
+                scanFrom = from,
+            )
+            mail.saveAccount(updated, null)
+            MailScanWorker.scanNow(context, account.id)
+        }
+    }
+
     fun saveAutoScan(account: MailAccount, s: AutoScanSettings) {
         viewModelScope.launch {
             mail.saveAutoScan(s)

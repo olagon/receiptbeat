@@ -105,13 +105,13 @@ class MailRepository @Inject constructor(
 
     // Connected accounts: remembered scan ranges.
 
-    suspend fun gaps(accountId: String, folder: String, from: LocalDate, to: LocalDate) = ScanRanges.gaps(
-        dao.ranges(accountId, folder).filter { it.queryVersion == QUERY_VERSION }.map { it.fromDate to it.toDate },
+    suspend fun gaps(accountId: String, folder: String, from: LocalDate, to: LocalDate, words: String?) = ScanRanges.gaps(
+        dao.ranges(accountId, folder).filter { it.queryVersion == version(words) }.map { it.fromDate to it.toDate },
         from to to
     )
 
-    suspend fun rangeDone(accountId: String, folder: String, from: LocalDate, to: LocalDate) =
-        dao.insertRange(ScanRange(accountId = accountId, folder = folder, fromDate = from, toDate = to, queryVersion = QUERY_VERSION))
+    suspend fun rangeDone(accountId: String, folder: String, from: LocalDate, to: LocalDate, words: String?) =
+        dao.insertRange(ScanRange(accountId = accountId, folder = folder, fromDate = from, toDate = to, queryVersion = version(words)))
 
     suspend fun saveRun(r: ScanRun) = dao.upsertRun(r)
 
@@ -124,6 +124,9 @@ class MailRepository @Inject constructor(
     companion object {
         /** Bump when the server search words change, so old ranges get searched again. */
         const val QUERY_VERSION = 1
+
+        /** New search words mean the old ranges no longer count, so those dates get searched again. */
+        fun version(words: String?) = QUERY_VERSION * 100_000 + (words?.trim()?.lowercase()?.hashCode()?.mod(100_000) ?: 0)
 
         /** A rule for "uber.com" covers "receipts@uber.com" and "noreply@m.uber.com". */
         fun matches(rule: String, sender: String): Boolean {

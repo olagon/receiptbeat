@@ -58,16 +58,33 @@ class ImapClient(private val config: ImapConfig) : Closeable {
 
     fun folders(): List<String> = store().defaultFolder.list("*").filter { it.type and Folder.HOLDS_MESSAGES != 0 }.map { it.fullName }
 
-    /** Date-bounded search (inclusive dates) with server-side narrowing. Returns UIDs ascending. */
-    fun search(folder: String, from: LocalDate, to: LocalDate): List<Long> {
+    /**
+     * Folders worth searching by default. Gmail keeps archived mail only in All Mail (the All special folder),
+     * so that one folder covers everything. Other providers: the inbox plus any archive or receipts folder.
+     */
+    fun defaultFolders(): List<String> {
+        val all = store().defaultFolder.list("*").filterIsInstance<IMAPFolder>().filter { it.type and Folder.HOLDS_MESSAGES != 0 }
+        all.firstOrNull { f -> f.attributes.any { it.equals("\\All", true) } }?.let { return listOf(it.fullName) }
+        val extra = all.filter { f ->
+            f.attributes.any { it.equals("\\Archive", true) } || DEFAULT_FOLDER_WORDS.any { f.fullName.contains(it, ignoreCase = true) }
+        }
+        return (listOf("INBOX") + extra.map { it.fullName }).distinct()
+    }
+
+    /**
+     * Date-bounded search (inclusive dates) with server-side narrowing. Returns UIDs ascending.
+     * [words] replaces the default receipt words. For Gmail it is Gmail search syntax, like `from:amazon.com`.
+     */
+    fun search(folder: String, from: LocalDate, to: LocalDate, words: String? = null): List<Long> {
         val f = open(folder)
-        if (gmail) return gmailRaw(f, gmailQuery(from, to))
-        val words = SEARCH_WORDS.flatMap { listOf<SearchTerm>(SubjectTerm(it), BodyTerm(it)) }
+        if (gmail) return gmailRaw(f, gmailQuery(from, to, words))
+        val list = words?.split(Regex("[,\\s]+"))?.filter { it.isNotBlank() }?.takeIf { it.isNotEmpty() } ?: SEARCH_WORDS
+        val terms = list.flatMap { listOf<SearchTerm>(SubjectTerm(it), BodyTerm(it)) }
         val term = AndTerm(
             arrayOf(
                 ReceivedDateTerm(ComparisonTerm.GE, date(from)),
                 ReceivedDateTerm(ComparisonTerm.LT, date(to.plusDays(1))),
-                OrTerm(words.toTypedArray())
+                OrTerm(terms.toTypedArray())
             )
         )
         return uids(f, f.search(term))
@@ -159,9 +176,12 @@ class ImapClient(private val config: ImapConfig) : Closeable {
         private val SEARCH_WORDS = listOf("receipt", "invoice", "order", "total", "paid", "payment")
         private val GMAIL_DATE = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
-        internal fun gmailQuery(from: LocalDate, to: LocalDate): String =
+        private val DEFAULT_FOLDER_WORDS = listOf("archive", "receipt", "purchase", "order", "invoice")
+        const val GMAIL_DEFAULT_WORDS = "receipt OR invoice OR order OR \"your trip\" OR payment OR total OR paid OR category:purchases"
+
+        internal fun gmailQuery(from: LocalDate, to: LocalDate, words: String? = null): String =
             "after:${from.format(GMAIL_DATE)} before:${to.plusDays(1).format(GMAIL_DATE)} " +
-                "(receipt OR invoice OR order OR \"your trip\" OR payment OR total OR paid OR category:purchases)"
+                "(${words?.takeIf { it.isNotBlank() } ?: GMAIL_DEFAULT_WORDS}) -in:spam -in:trash"
 
         fun hostFor(email: String): String? {
             val domain = email.substringAfterLast('@').trim().lowercase()

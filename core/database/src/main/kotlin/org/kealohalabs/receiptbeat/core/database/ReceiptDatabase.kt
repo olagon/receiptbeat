@@ -1,6 +1,7 @@
 package org.kealohalabs.receiptbeat.core.database
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -35,7 +36,8 @@ import org.kealohalabs.receiptbeat.core.model.Split
 import org.kealohalabs.receiptbeat.core.model.TaxLine
 
 @Database(
-    version = 1,
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
     exportSchema = true,
     entities = [
         Receipt::class, ReceiptFts::class, ReceiptFile::class, FieldConfidence::class, LineItem::class, Split::class,
