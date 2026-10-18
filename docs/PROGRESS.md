@@ -57,12 +57,12 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 **Gate:** you submit one real reimbursement report built in Receipt Beat
 
 ## Phase 5. Polish and release
-- [ ] Motion, haptics, shared element capture animation
-- [ ] Accessibility pass (TalkBack, 200% font, contrast)
-- [ ] Foldable and tablet layouts
-- [ ] Glance widget, Quick Settings tile, app shortcuts
-- [ ] Baseline Profiles and performance checks
-- [ ] Privacy policy page, Play Store listing, screenshots
+- [x] Motion and haptics (springs, shimmer, swipe haptics, heartbeat logo). Shared element photo-to-card animation not done
+- [x] Accessibility pass: money read as money, status icon plus color, swipe actions in the accessibility menu, 200% font checked on Home
+- [x] Foldable and tablet layouts (rail plus list and detail side by side)
+- [x] Glance widget, Quick Settings tile, app shortcuts
+- [ ] Baseline Profiles and performance checks (needs a real phone)
+- [x] Privacy policy (docs/PRIVACY.md) and store listing text (docs/STORE_LISTING.md). Screenshots not taken
 - [ ] Play internal testing track, then the public Play Store listing
 
 **Gate:** five outside testers use it for two weeks with no crashes and no lost receipts

@@ -124,7 +124,13 @@ private sealed interface Editing {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(back: () -> Unit, share: (String) -> Unit, showBack: Boolean = true, vm: DetailViewModel = hiltViewModel()) {
+fun DetailScreen(
+    id: String,
+    back: () -> Unit,
+    share: (String) -> Unit,
+    showBack: Boolean = true,
+    vm: DetailViewModel = hiltViewModel<DetailViewModel, DetailViewModel.Factory>(key = id) { it.create(id) },
+) {
     val s by vm.state.collectAsStateWithLifecycle()
     val d = s.detail
     var editing by remember { mutableStateOf<Editing?>(null) }

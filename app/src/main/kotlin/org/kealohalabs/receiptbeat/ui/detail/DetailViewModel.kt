@@ -1,12 +1,12 @@
 package org.kealohalabs.receiptbeat.ui.detail
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +29,6 @@ import org.kealohalabs.receiptbeat.core.model.Project
 import org.kealohalabs.receiptbeat.core.model.Receipt
 import org.kealohalabs.receiptbeat.core.model.Status
 import org.kealohalabs.receiptbeat.core.model.Track
-import org.kealohalabs.receiptbeat.ui.ReceiptRoute
 
 data class DetailState(
     val detail: ReceiptDetail? = null,
@@ -43,14 +42,17 @@ data class DetailState(
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-class DetailViewModel @Inject constructor(
-    saved: SavedStateHandle,
+@HiltViewModel(assistedFactory = DetailViewModel.Factory::class)
+class DetailViewModel @AssistedInject constructor(
+    @Assisted val id: String,
     private val repo: ReceiptRepository,
     catalog: CatalogRepository,
     settings: SettingsRepository
 ) : ViewModel() {
-    val id: String = saved.toRoute<ReceiptRoute>().id
+    @AssistedFactory
+    interface Factory {
+        fun create(id: String): DetailViewModel
+    }
 
     private val dup = repo.detail(id).flatMapLatest { d ->
         val other = d?.receipt?.duplicateOfId ?: return@flatMapLatest flowOf<Pair<Receipt?, String?>>(null to null)

@@ -31,6 +31,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -88,7 +89,7 @@ fun AppShell(actions: AppActions, nav: NavHostController = rememberNavController
                     }
                 }
             }
-            AppNavHost(nav, Modifier.weight(1f), actions, start)
+            Surface(Modifier.weight(1f), color = MaterialTheme.colorScheme.background) { AppNavHost(nav, Modifier, actions, start) }
         }
     } else {
         Scaffold(
@@ -113,10 +114,18 @@ private fun TabIcon(t: Tab, badge: Int) {
 
 @Composable
 private fun BottomBar(dest: (Tab) -> Boolean, select: (Tab) -> Unit, capture: () -> Unit, reviewBadge: Int) {
+    // At very large font sizes only the selected tab shows its label, so words never break.
+    val roomy = androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f
     Box {
         NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
             Tabs.take(2).forEach { t ->
-                NavigationBarItem(dest(t), { select(t) }, { TabIcon(t, 0) }, label = { Text(t.label) })
+                NavigationBarItem(
+                    dest(t),
+                    { select(t) },
+                    { TabIcon(t, 0) },
+                    label = { Text(t.label, maxLines = 1, softWrap = false) },
+                    alwaysShowLabel = roomy
+                )
             }
             Spacer(Modifier.weight(1f))
             Tabs.drop(2).forEach { t ->
@@ -124,7 +133,8 @@ private fun BottomBar(dest: (Tab) -> Boolean, select: (Tab) -> Unit, capture: ()
                     dest(t),
                     { select(t) },
                     { TabIcon(t, if (t.route == ReviewRoute) reviewBadge else 0) },
-                    label = { Text(t.label) }
+                    label = { Text(t.label, maxLines = 1, softWrap = false) },
+                    alwaysShowLabel = roomy
                 )
             }
         }

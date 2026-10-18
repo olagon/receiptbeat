@@ -1,7 +1,16 @@
 package org.kealohalabs.receiptbeat.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -35,8 +44,32 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, 
                 openMoney = { nav.navigate(MoneyRoute()) }
             )
         }
-        composable<ReceiptsRoute> { ReceiptsScreen(open = openReceipt) }
-        composable<ReceiptRoute> { DetailScreen(back = { nav.popBackStack() }, share = actions.shareReceipt) }
+        composable<ReceiptsRoute> {
+            if (LocalConfiguration.current.screenWidthDp >= TWO_PANE_DP) {
+                // Foldable inner screen and tablets: list on the left, receipt on the right.
+                var selected by rememberSaveable { mutableStateOf<String?>(null) }
+                Row {
+                    Box(Modifier.weight(1f)) { ReceiptsScreen(open = { selected = it }) }
+                    Box(Modifier.weight(1.2f)) {
+                        val id = selected
+                        if (id == null) {
+                            Text(
+                                "Pick a receipt to see it here.",
+                                Modifier.align(Alignment.Center),
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            DetailScreen(id, back = { selected = null }, share = actions.shareReceipt, showBack = false)
+                        }
+                    }
+                }
+            } else {
+                ReceiptsScreen(open = openReceipt)
+            }
+        }
+        composable<ReceiptRoute> {
+            DetailScreen(it.toRoute<ReceiptRoute>().id, back = { nav.popBackStack() }, share = actions.shareReceipt)
+        }
         composable<CaptureRoute> {
             val r = it.toRoute<CaptureRoute>()
             CaptureScreen(
@@ -87,3 +120,5 @@ fun AppNavHost(nav: NavHostController, modifier: Modifier, actions: AppActions, 
         composable<BackupRoute> { BackupScreen(back = { nav.popBackStack() }, share = actions.shareFiles) }
     }
 }
+
+private const val TWO_PANE_DP = 700

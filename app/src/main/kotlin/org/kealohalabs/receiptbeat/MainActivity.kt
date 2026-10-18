@@ -17,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -50,6 +51,8 @@ class MainActivity : FragmentActivity() {
 
     @Inject lateinit var mail: MailRepository
 
+    private val lockState = MutableStateFlow(true)
+
     /** Routes asked for by shortcuts, notifications and the share sheet. */
     private val routes = Channel<Any>(Channel.BUFFERED)
 
@@ -71,12 +74,17 @@ class MainActivity : FragmentActivity() {
         setContent {
             val s by settings.settings.collectAsStateWithLifecycle(first)
             val reviewCount by mail.reviewCount.collectAsStateWithLifecycle(0)
+            val locked by lockState.collectAsStateWithLifecycle()
             val nav = rememberNavController()
             LaunchedEffect(Unit) { routes.receiveAsFlow().collect { nav.navigate(it) } }
             ReceiptBeatTheme(
                 mode = runCatching { ThemeMode.valueOf(s.theme) }.getOrDefault(ThemeMode.SYSTEM),
                 dynamicColor = s.dynamicColor
             ) {
+                if (s.appLock && locked) {
+                    LockScreen { AppLock.prompt(this@MainActivity) { lockState.value = false } }
+                    return@ReceiptBeatTheme
+                }
                 CompositionLocalProvider(LocalImageLoader provides images) {
                     AppShell(
                         actions = AppActions(
@@ -95,6 +103,16 @@ class MainActivity : FragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handle(intent)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        lockState.value = AppLock.needsUnlock(runBlocking { settings.current() }.lockTimeoutSec)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        AppLock.left()
     }
 
     override fun onResume() {
