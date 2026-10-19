@@ -404,6 +404,9 @@ class ReceiptRepository @Inject constructor(
         if (match?.id != r.duplicateOfId) dao.upsert(r.copy(duplicateOfId = match?.id))
     }
 
+    /** Runs the duplicate check again on flagged receipts, so a better rule clears old false flags. */
+    suspend fun recheckDuplicates() = dao.all().filter { it.duplicateOfId != null && it.deletedAt == null }.forEach { markDuplicate(it) }
+
     suspend fun resolveDuplicate(keepId: String, otherId: String, action: DuplicateAction) {
         when (action) {
             DuplicateAction.KEEP_BOTH -> {

@@ -48,6 +48,9 @@ class HelpersTest {
         assertFalse(Duplicates.isLikely(500, d, null, null, 501, d, null, null))
         assertTrue(Duplicates.isLikely(null, null, null, 0b111111L, null, null, null, 0L))
         assertFalse(Duplicates.isLikely(null, null, null, 0b1111111L, null, null, null, 0L))
+        // Similar looking printed receipts with different totals are not duplicates.
+        assertFalse(Duplicates.isLikely(1387, d, "Kona Bean Cafe", 0L, 31142, d, "Island Air", 0L))
+        assertTrue(Duplicates.isLikely(1387, d, null, 0L, null, null, null, 0L))
     }
 
     private fun extracted(total: Long?, subtotal: Long? = null, tax: Long? = null, date: LocalDate? = null) = Extracted(

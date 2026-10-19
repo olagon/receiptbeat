@@ -80,7 +80,11 @@ object ImageHash {
 }
 
 object Duplicates {
-    /** Likely duplicate: same total and dates within one day (merchant keys equal or either null), OR image hashes within distance 6. */
+    /**
+     * Likely duplicate: same total and dates within one day (merchant keys equal or either null),
+     * OR image hashes within distance 6 when the totals do not disagree. Printed receipts all look alike
+     * to a small image hash, so two different totals always mean two different receipts.
+     */
     fun isLikely(
         aTotal: Long?,
         aDate: LocalDate?,
@@ -91,7 +95,8 @@ object Duplicates {
         bMerchant: String?,
         bHash: Long?
     ): Boolean {
-        if (aHash != null && bHash != null && ImageHash.distance(aHash, bHash) <= 6) return true
+        val totalsDiffer = aTotal != null && bTotal != null && aTotal != bTotal
+        if (!totalsDiffer && aHash != null && bHash != null && ImageHash.distance(aHash, bHash) <= 6) return true
         if (aTotal == null || aTotal != bTotal || aDate == null || bDate == null) return false
         if (abs(ChronoUnit.DAYS.between(aDate, bDate)) > 1) return false
         return aMerchant == null || bMerchant == null || MerchantNormalizer.key(aMerchant) == MerchantNormalizer.key(bMerchant)

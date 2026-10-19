@@ -230,8 +230,14 @@ object RulesParser {
     private val dayMonDate = Regex("""(?<!\d)(\d{1,2})(?:ST|ND|RD|TH)?[ \-.]*$MON[ \-,.]*(\d{4}|\d{2})(?!\d)""")
     private val monDayDate = Regex("""(?<![\p{L}])$MON[ \-]*(\d{1,2})(?:ST|ND|RD|TH)?,?[ \-]+(\d{4}|\d{2})(?!\d)""")
 
+    // OCR often splits the year on receipt fonts: "10/05/2 026". Not a time: "10/05/20 07:42" stays as is.
+    private val splitYear = Regex("""(\d{1,2}[/.\-]\d{1,2}[/.\-])(\d{1,3}) (\d{1,3})(?![\d:])""")
+
     private fun datesIn(text: String, dayFirst: Boolean): List<LocalDate> {
-        val t = text.uppercase().replace(Regex("""(?<=\d)O|O(?=\d)"""), "0")
+        val t = text.uppercase().replace(Regex("""(?<=\d)O|O(?=\d)"""), "0").replace(splitYear) { m ->
+            val (head, a, b) = m.destructured
+            if ((a + b).length == 4 && (a + b).startsWith("20")) head + a + b else m.value
+        }
         val out = mutableListOf<Pair<Int, LocalDate>>()
         fun add(m: MatchResult, y: String, month: Int, d: Int) {
             val year = y.toInt().let { if (it < 100) 2000 + it else it }

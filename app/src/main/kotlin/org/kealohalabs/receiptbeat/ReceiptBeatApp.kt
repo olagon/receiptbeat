@@ -47,6 +47,7 @@ class ReceiptBeatApp : Application(), Configuration.Provider {
             catalog.seedIfEmpty()
             receipts.purgeTrash()
             receipts.recoverStuck().forEach(pipeline::enqueue)
+            receipts.recheckDuplicates()
         }
         // Keep the home screen widget in step with the money numbers.
         scope.launch {

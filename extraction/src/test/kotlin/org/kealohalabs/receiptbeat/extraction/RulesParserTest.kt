@@ -17,6 +17,14 @@ class RulesParserTest {
         assertEquals(LocalTime.of(14, 32), r.time)
     }
 
+    @Test fun yearSplitByOcr() {
+        // Real ML Kit output from a receipt font.
+        assertEquals(LocalDate.of(2026, 10, 5), parse("KONA BEAN CAFE\n10/05/2 026 07:42 AM\nTOTAL 13.87").date.value)
+        assertEquals(LocalDate.of(2026, 10, 5), parse("Cafe\n10/05/20 26\nTOTAL 1.00").date.value)
+        // A short year followed by a time is not a split year.
+        assertEquals(LocalDate.of(2020, 10, 5), parse("Cafe\n10/05/20 07:42\nTOTAL 1.00").date.value)
+    }
+
     @Test fun dayFirstWhenDayOver12() = assertEquals(LocalDate.of(2026, 3, 17), parse("Cafe\n17/03/2026\nTOTAL 3.00").date.value)
 
     @Test fun dotDatesAreDayFirst() = assertEquals(LocalDate.of(2026, 3, 4), parse("Cafe\n04.03.2026\nSUMME 3,00 €").date.value)
