@@ -29,8 +29,8 @@ class ExportsTest {
             )
         )
         val lines = csv.trimEnd().split("\r\n")
-        assertEquals("Date,Merchant,Category,Amount,Tax,Currency,Payer,Project,Notes,File", lines[0])
-        assertEquals("2026-03-14,Kona Coffee,Meals,12.50,1.04,USD,,,\"Team, lunch\",a.jpg", lines[1])
+        assertEquals("Date,Merchant,Category,Amount,Personal,Charged,Tax,Currency,Payer,Project,Notes,File", lines[0])
+        assertEquals("2026-03-14,Kona Coffee,Meals,12.50,,12.50,1.04,USD,,,\"Team, lunch\",a.jpg", lines[1])
     }
 
     @Test fun namesTaxZipFiles() {

@@ -91,7 +91,7 @@ object DashboardMath {
         val payers = (toSubmit + waiting).groupBy { it.payerId }.map { (pid, list) ->
             PayerMoney(
                 pid,
-                list.filter { it in toSubmit }.sumOf { it.totalCents ?: 0 },
+                list.filter { it in toSubmit }.sumOf { it.chargeCents ?: 0 },
                 list.filter { it in waiting }.sumOf { ReceiptRepository.owed(it) },
             )
         }.sortedByDescending { it.toSubmitCents + it.waitingCents }
@@ -111,17 +111,17 @@ object DashboardMath {
 
         return DashboardView(
             period = period,
-            toSubmitCents = toSubmit.sumOf { it.totalCents ?: 0 },
+            toSubmitCents = toSubmit.sumOf { it.chargeCents ?: 0 },
             toSubmitCount = toSubmit.size,
             waitingCents = waiting.sumOf { ReceiptRepository.owed(it) },
             waitingCount = waiting.size,
-            paidBackCents = paid.sumOf { it.reimbursedCents ?: it.totalCents ?: 0 },
+            paidBackCents = paid.sumOf { it.reimbursedCents ?: it.chargeCents ?: 0 },
             paidBackCount = paid.size,
             spentCents = spent.sumOf { it.totalCents ?: 0 },
             spentCount = spent.size,
             previousSpentCents = prev,
             deductibleCents = spent.filter { it.track == Track.TAX && it.status != Status.ARCHIVED }
-                .sumOf { (it.totalCents ?: 0) * (pct[it.categoryId] ?: 100) / 100 },
+                .sumOf { (it.chargeCents ?: 0) * (pct[it.categoryId] ?: 100) / 100 },
             byPayer = payers,
             byCategory = spent.groupBy { it.categoryId }.map { (c, l) -> CategorySpend(c, l.sumOf { it.totalCents ?: 0 }) }
                 .filter { it.cents > 0 }.sortedByDescending { it.cents },

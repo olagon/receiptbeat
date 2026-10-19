@@ -27,4 +27,21 @@ class MigrationTest {
             assertEquals(null, c.getString(1))
         }
     }
+
+    /** Version 4 adds the personal part. Old receipts keep their total and have no personal part. */
+    @Test fun migrate3To4KeepsReceipts() {
+        helper.createDatabase("r.db", 3).apply {
+            execSQL(
+                "INSERT INTO Receipt (id, createdAt, updatedAt, source, totalCents, currency, track, status, locked, reading) " +
+                    "VALUES ('r', 0, 0, 'CAMERA', 1250, 'USD', 'REIMBURSABLE', 'READY', 0, 0)"
+            )
+            close()
+        }
+        val db = helper.runMigrationsAndValidate("r.db", 4, true)
+        db.query("SELECT totalCents, personalCents FROM Receipt").use { c ->
+            c.moveToFirst()
+            assertEquals(1250L, c.getLong(0))
+            assertEquals(true, c.isNull(1))
+        }
+    }
 }

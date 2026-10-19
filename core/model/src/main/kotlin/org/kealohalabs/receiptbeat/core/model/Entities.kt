@@ -2,6 +2,7 @@ package org.kealohalabs.receiptbeat.core.model
 
 import androidx.room.Entity
 import androidx.room.Fts4
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.Instant
@@ -36,6 +37,8 @@ data class Receipt(
     val totalCents: Long? = null,
     val currency: String = "USD",
     val homeCurrencyTotalCents: Long? = null,
+    /** Part of the total that was personal and is not charged to the payer or claimed. */
+    val personalCents: Long? = null,
     val fxRate: Double? = null,
     val paymentBrand: String? = null,
     val paymentLast4: String? = null,
@@ -59,7 +62,11 @@ data class Receipt(
     val reading: Boolean = false,
     val rejectReason: String? = null,
     val deletedAt: Instant? = null
-)
+) {
+    /** What gets charged or claimed: the total minus any personal part. */
+    @get:Ignore
+    val chargeCents: Long? get() = totalCents?.let { (it - (personalCents ?: 0)).coerceAtLeast(0) }
+}
 
 /** Full text search over merchant, notes, receipt text and email subject. Room keeps it in sync. */
 @Fts4(contentEntity = Receipt::class)

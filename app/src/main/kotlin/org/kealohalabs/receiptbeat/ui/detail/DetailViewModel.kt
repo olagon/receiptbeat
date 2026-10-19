@@ -84,6 +84,7 @@ class DetailViewModel @AssistedInject constructor(
                 Fields.SUBTOTAL -> it.copy(subtotalCents = cents)
                 Fields.TAX -> it.copy(taxCents = cents)
                 Fields.TIP -> it.copy(tipCents = cents)
+                "personal" -> it.copy(personalCents = cents?.takeIf { c -> c > 0 })
                 else -> it.copy(totalCents = cents)
             }
         }

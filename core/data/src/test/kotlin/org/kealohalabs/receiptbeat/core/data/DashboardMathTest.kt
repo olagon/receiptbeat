@@ -71,4 +71,14 @@ class DashboardMathTest {
         assertEquals(LocalDate.of(2026, 10, 1), Period.QUARTER.start(today))
         assertEquals(LocalDate.of(2026, 7, 1), Period.QUARTER.start(LocalDate.of(2026, 9, 30)))
     }
+
+    @Test fun personalPartIsNeverCharged() {
+        // $120 at the store, $35 of it was personal: only $85 is owed, reported and paid back.
+        val r = Receipt(track = Track.REIMBURSABLE, status = Status.READY, totalCents = 12000, personalCents = 3500, purchaseDate = today)
+        assertEquals(8500L, r.chargeCents)
+        assertEquals(8500L, DashboardMath.build(listOf(r), emptyList(), emptyList(), Period.MONTH, today, utc).owedCents)
+        assertEquals(8500L, ReceiptRepository.owed(r.copy(status = Status.SUBMITTED)))
+        // Foreign receipt: the home amount is cut by the same share.
+        assertEquals(17000L, ReportRepository.homeCents(r.copy(totalCents = 10000, personalCents = 1500, homeCurrencyTotalCents = 20000)))
+    }
 }

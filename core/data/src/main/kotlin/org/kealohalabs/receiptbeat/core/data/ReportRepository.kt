@@ -99,7 +99,7 @@ class ReportRepository @Inject constructor(
             PayerTotals(
                 payer = p,
                 ready = ready,
-                readyCents = ready.sumOf { it.totalCents ?: 0 },
+                readyCents = ready.sumOf { it.chargeCents ?: 0 },
                 submittedCents = list.filter { isOwed(it) }.sumOf { ReceiptRepository.owed(it) },
                 paidCents = list.filter { it.status == Status.REIMBURSED || it.status == Status.PARTLY_REIMBURSED }
                     .sumOf { it.reimbursedCents ?: 0 }
@@ -201,8 +201,13 @@ class ReportRepository @Inject constructor(
 
         fun isOwed(r: Receipt) = r.status == Status.SUBMITTED || r.status == Status.PARTLY_REIMBURSED
 
-        /** Amount in the home currency when a rate was used, else the receipt amount. */
-        fun homeCents(r: Receipt) = r.homeCurrencyTotalCents ?: r.totalCents ?: 0
+        /** Charged amount in the home currency when a rate was used, else in the receipt currency. */
+        fun homeCents(r: Receipt): Long {
+            val charge = r.chargeCents ?: 0
+            val home = r.homeCurrencyTotalCents ?: return charge
+            val total = r.totalCents ?: return home
+            return if (total == 0L) home else home * charge / total
+        }
 
         fun stateOf(r: Report) = when {
             r.paidAt != null -> ReportState.PAID

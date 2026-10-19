@@ -88,12 +88,12 @@ class ReceiptRepository @Inject constructor(
                     (it.status == Status.READY || it.status == Status.INBOX || it.status == Status.REJECTED)
             }
             Dashboard(
-                owedCents = owedItems.sumOf { owed(it) } + ready.sumOf { it.totalCents ?: 0 },
+                owedCents = owedItems.sumOf { owed(it) } + ready.sumOf { it.chargeCents ?: 0 },
                 owedByPayer = owedItems.groupBy { it.payerId }.mapValues { (_, v) -> v.sumOf { owed(it) } },
-                readyCents = ready.sumOf { it.totalCents ?: 0 },
+                readyCents = ready.sumOf { it.chargeCents ?: 0 },
                 readyCount = ready.size,
                 deductibleCents = all.filter { it.track == Track.TAX && taxYearOf(it) == year && it.status != Status.ARCHIVED }
-                    .sumOf { (it.totalCents ?: 0) * (pct[it.categoryId] ?: 100) / 100 },
+                    .sumOf { (it.chargeCents ?: 0) * (pct[it.categoryId] ?: 100) / 100 },
                 inboxCount = all.count { it.status == Status.INBOX && !it.reading },
                 lowConfidenceCount = all.count { it.id in low && it.status == Status.INBOX }
             )
@@ -251,6 +251,7 @@ class ReceiptRepository @Inject constructor(
             Fields.TAX -> r.taxCents?.toString()
             Fields.TIP -> r.tipCents?.toString()
             Fields.TOTAL -> r.totalCents?.toString()
+            "personal" -> r.personalCents?.toString()
             Fields.CURRENCY -> r.currency
             else -> null
         }
@@ -283,7 +284,7 @@ class ReceiptRepository @Inject constructor(
         db.withTransaction {
             dao.getMany(ids.toList()).filter { !it.locked }.forEach { r ->
                 val reimbursed = when (status) {
-                    Status.REIMBURSED -> r.totalCents
+                    Status.REIMBURSED -> r.chargeCents
                     Status.READY, Status.INBOX, Status.SUBMITTED -> null
                     else -> r.reimbursedCents
                 }
@@ -327,7 +328,7 @@ class ReceiptRepository @Inject constructor(
 
     suspend fun markPaid(id: String, cents: Long) {
         val r = dao.get(id) ?: return
-        val total = r.totalCents ?: cents
+        val total = r.chargeCents ?: cents
         val status = if (cents >= total) Status.REIMBURSED else Status.PARTLY_REIMBURSED
         dao.upsert(r.copy(status = status, reimbursedCents = cents, reimbursedAt = Instant.now(), updatedAt = Instant.now()))
         event(id, "Paid ${Money.format(cents, r.currency)}")
@@ -447,7 +448,7 @@ class ReceiptRepository @Inject constructor(
         /** History entries that start with this are hidden markers, not shown to the user. */
         const val NOT_DUPLICATE = "not-duplicate:"
 
-        fun owed(r: Receipt) = ((r.totalCents ?: 0) - (r.reimbursedCents ?: 0)).coerceAtLeast(0)
+        fun owed(r: Receipt) = ((r.chargeCents ?: 0) - (r.reimbursedCents ?: 0)).coerceAtLeast(0)
         fun taxYearOf(r: Receipt): Int = r.taxYear ?: r.purchaseDate?.year ?: LocalDate.ofEpochDay(r.createdAt.epochSecond / 86400).year
     }
 }

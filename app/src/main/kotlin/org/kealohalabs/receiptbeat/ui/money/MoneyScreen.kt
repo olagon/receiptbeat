@@ -323,7 +323,7 @@ private fun ReceiptLine(r: Receipt, hidden: Boolean, onClick: () -> Unit) {
             )
         }
         StatusChip(r.status, Modifier.padding(horizontal = 8.dp))
-        MoneyText(r.totalCents, style = MoneyStyle.Small, currency = r.currency, hidden = hidden)
+        MoneyText(r.chargeCents, style = MoneyStyle.Small, currency = r.currency, hidden = hidden)
     }
 }
 
@@ -472,11 +472,11 @@ private fun CreateReportSheet(p: PayerTotals, hidden: Boolean, onDismiss: () -> 
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        MoneyText(r.totalCents, style = MoneyStyle.Small, currency = r.currency, hidden = hidden)
+                        MoneyText(r.chargeCents, style = MoneyStyle.Small, currency = r.currency, hidden = hidden)
                     }
                 }
             }
-            val total = p.ready.filter { it.id in picked }.sumOf { it.totalCents ?: 0 }
+            val total = p.ready.filter { it.id in picked }.sumOf { it.chargeCents ?: 0 }
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("${picked.size} receipts", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                 MoneyText(total, hidden = hidden)

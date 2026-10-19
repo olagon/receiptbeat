@@ -28,7 +28,8 @@ import org.kealohalabs.receiptbeat.core.model.ReceiptFile
 import org.kealohalabs.receiptbeat.core.model.Report
 
 object Csv {
-    val header = listOf("Date", "Merchant", "Category", "Amount", "Tax", "Currency", "Payer", "Project", "Notes", "File")
+    val header =
+        listOf("Date", "Merchant", "Category", "Amount", "Personal", "Charged", "Tax", "Currency", "Payer", "Project", "Notes", "File")
 
     /** RFC 4180 quoting. Text that a spreadsheet would run as a formula gets a leading quote mark. */
     fun cell(value: String): String {
@@ -48,6 +49,8 @@ object Csv {
                         r.merchantName.orEmpty(),
                         r.categoryId?.let { names.categories[it] }.orEmpty(),
                         decimal(r.totalCents),
+                        decimal(r.personalCents),
+                        decimal(r.chargeCents),
                         decimal(r.taxCents),
                         r.currency,
                         r.payerId?.let { names.payers[it] }.orEmpty(),

@@ -231,6 +231,20 @@ fun DetailScreen(
                 MoneyRow("Total", r.totalCents, r.currency, d.confidence[Fields.TOTAL], big = true, hide = s.hideAmounts) {
                     edit(Fields.TOTAL, "Total", r.totalCents?.let { Money.format(it, r.currency) }, true)
                 }
+                // Part of the receipt was personal: reports and taxes use only the rest.
+                if (r.track != Track.PERSONAL) {
+                    MoneyRow("Personal part, not charged", r.personalCents, r.currency, null, hide = s.hideAmounts) {
+                        edit("personal", "Personal part, not charged", r.personalCents?.let { Money.format(it, r.currency) }, true)
+                    }
+                    if (r.personalCents != null && !s.hideAmounts) {
+                        Text(
+                            "Charging ${Money.format(r.chargeCents ?: 0, r.currency)} of ${Money.format(r.totalCents ?: 0, r.currency)}.",
+                            Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 MoneyRow("Subtotal", r.subtotalCents, r.currency, d.confidence[Fields.SUBTOTAL], hide = s.hideAmounts) {
                     edit(Fields.SUBTOTAL, "Subtotal", r.subtotalCents?.let { Money.format(it, r.currency) }, true)
                 }

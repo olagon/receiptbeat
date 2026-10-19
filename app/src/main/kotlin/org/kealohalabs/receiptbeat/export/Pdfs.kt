@@ -176,7 +176,7 @@ object ReportPdf {
             (pages.ifEmpty { listOf(null) }).forEach { bmp ->
                 pdf.newPage()
                 pdf.text(r.merchantName ?: "Receipt", M, pdf.y, 14f, true, maxW = W - 2 * M - 120)
-                pdf.text(amount(r.totalCents, r.currency), W - M, pdf.y, 14f, true, right = true)
+                pdf.text(amount(r.chargeCents, r.currency), W - M, pdf.y, 14f, true, right = true)
                 pdf.y += 18
                 val info = listOfNotNull(
                     r.purchaseDate?.format(PdfDate),
@@ -185,6 +185,14 @@ object ReportPdf {
                     r.projectId?.let { names.projects[it] }
                 ).joinToString("    ")
                 pdf.text(info, M, pdf.y, 10f, color = GREY, maxW = W - 2 * M)
+                r.personalCents?.let {
+                    pdf.y += 14
+                    val line = "Receipt total ${amount(
+                        r.totalCents,
+                        r.currency
+                    )}. Personal part ${Money.format(it, r.currency)} not charged."
+                    pdf.text(line, M, pdf.y, 10f, color = GREY, maxW = W - 2 * M)
+                }
                 r.notes?.takeIf { it.isNotBlank() }?.let {
                     pdf.y += 14
                     pdf.text(it.replace('\n', ' '), M, pdf.y, 10f, color = GREY, maxW = W - 2 * M)
@@ -225,8 +233,19 @@ object ReportPdf {
             pdf.text(r.purchaseDate?.toString() ?: "No date", M, pdf.y)
             pdf.text(r.merchantName ?: "Receipt", M + 80, pdf.y, maxW = 170f)
             pdf.text(r.categoryId?.let { names.categories[it] } ?: "No category", M + 260, pdf.y, maxW = 140f)
-            pdf.text(amount(r.totalCents, r.currency), amountX, pdf.y, right = true)
+            pdf.text(amount(r.chargeCents, r.currency), amountX, pdf.y, right = true)
             pdf.text(r.currency, W - M - 40, pdf.y)
+            r.personalCents?.let {
+                pdf.y += 12
+                pdf.text(
+                    "of ${amount(r.totalCents, r.currency)}, ${Money.format(it, r.currency)} personal",
+                    amountX,
+                    pdf.y,
+                    8f,
+                    color = GREY,
+                    right = true
+                )
+            }
             if (foreign) {
                 pdf.y += 12
                 val rate = r.fxRate?.let { " at rate %.4f".format(it) } ?: ""

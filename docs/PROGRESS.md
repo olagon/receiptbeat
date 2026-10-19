@@ -82,3 +82,4 @@ Source: docs/SPEC.md, "Build phases and milestones". Check items off as they lan
 - Phase 3: file import checked on emulator with a 6 email mbox: 4 receipts found, newsletter and personal mail skipped, kept emails become Inbox receipts. IMAP tested against GreenMail in unit tests; a real Gmail or Yahoo account still needs a manual check.
 - Phase 4: report TR-2026-001 built on the emulator: cover page, summary table, receipt pages, CSV. Partial payments fill the oldest receipts first. Backup ZIP is plain (not encrypted), the app says so.
 - After phase 5: Trips screen (from Home). Add receipts dated in a trip in one tap, Trip filter and bulk Add to trip in Receipts, trip PDF and CSV (cover with spend by category, summary, a page per receipt). Checked on the emulator.
+- Personal part on a receipt (DB v4): reports, owed, paid back and tax totals use the total minus the personal part. PDF and CSV show both. Notes already print on each receipt page.
