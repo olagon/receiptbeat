@@ -1,5 +1,6 @@
 package org.kealohalabs.receiptbeat.email
 
+import com.google.mlkit.genai.common.FeatureStatus
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -163,6 +164,12 @@ class EmailIngest @Inject constructor(
     /** The on device AI decides on borderline emails. Only runs while the app is on screen. */
     suspend fun finishWithAi(limit: Int = 25): Int {
         if (!nano.inForeground) return 0
+        // No on device AI on this phone: stop saying "checking" and let the user decide in Review.
+        // Email text never goes to a cloud AI.
+        if (nano.status() == FeatureStatus.UNAVAILABLE) {
+            mail.candidatesNeedingAi().forEach { mail.updateCandidate(it.copy(needsAi = false)) }
+            return 0
+        }
         var done = 0
         for (c in mail.candidatesNeedingAi().take(limit)) {
             val reply = nano.ask(prompt(c)) ?: break
